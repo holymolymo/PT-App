@@ -14,6 +14,8 @@ window.MODULES = [
     subtitle: 'Überleben auf Portugiesisch',
     color: '#006B3C',
     unlocked: true,
+    prereqUnit: null, prereqPct: 0,
+    prereqLabel: null,
     vocabulary: [
       {id:'m1v01',pt:'por favor',de:'bitte',cat:'essencial',cefr:'A1',freq:1,
         contexts:['Um café, por favor.','Por favor, pode ajudar-me?']},
@@ -76,7 +78,9 @@ window.MODULES = [
     title: 'No Restaurante',
     subtitle: 'Essen bestellen & genießen',
     color: '#dc2626',
-    unlocked: true,
+    unlocked: false,
+    prereqUnit: 6, prereqPct: 50,
+    prereqLabel: 'Benötigt Lektion 6 (Einkaufen, queria-Form)',
     vocabulary: [
       {id:'m2v01',pt:'a ementa / o menu',de:'die Speisekarte',cat:'restaurante',cefr:'A1',freq:2,
         contexts:['A ementa, por favor.','Posso ver o menu?']},
@@ -155,7 +159,9 @@ window.MODULES = [
     title: 'Viagens e Transportes',
     subtitle: 'Unterwegs in Portugal',
     color: '#0891b2',
-    unlocked: true,
+    unlocked: false,
+    prereqUnit: 7, prereqPct: 50,
+    prereqLabel: 'Benötigt Lektion 7 (Ortsbeschreibung, Wegbeschreibung)',
     vocabulary: [
       {id:'m3v01',pt:'o aeroporto',de:'der Flughafen',cat:'transportes',cefr:'A1',freq:2,
         contexts:['Como chego ao aeroporto?','O aeroporto fica longe.']},
@@ -229,7 +235,9 @@ window.MODULES = [
     title: 'No Hotel',
     subtitle: 'Einchecken & Aufenthalt',
     color: '#7c3aed',
-    unlocked: true,
+    unlocked: false,
+    prereqUnit: 3, prereqPct: 50,
+    prereqLabel: 'Benötigt Lektion 3 (Begrüßung, ser vs. estar)',
     vocabulary: [
       {id:'m4v01',pt:'o quarto',de:'das Zimmer',cat:'hotel',cefr:'A1',freq:2,
         contexts:['Queria reservar um quarto.','O quarto tem vista para o mar.']},
@@ -281,7 +289,9 @@ window.MODULES = [
     title: 'Fazer Compras',
     subtitle: 'Einkaufen & Preise',
     color: '#d97706',
-    unlocked: true,
+    unlocked: false,
+    prereqUnit: 6, prereqPct: 50,
+    prereqLabel: 'Benötigt Lektion 6 (Einkaufen, Demonstrativpronomen)',
     vocabulary: [
       {id:'m5v01',pt:'a loja',de:'das Geschäft',cat:'compras',cefr:'A1',freq:2,
         contexts:['Esta loja tem boas coisas.','A loja fecha às 19 horas.']},
@@ -333,6 +343,8 @@ window.MODULES = [
     subtitle: 'Alltag, Wetter & Gefühle',
     color: '#059669',
     unlocked: false,
+    prereqUnit: 5, prereqPct: 50,
+    prereqLabel: 'Benötigt Lektion 5 (Reflexive Verben, estar a + Infinitiv)',
     vocabulary: [
       {id:'m6v01',pt:'acordar',de:'aufwachen',cat:'rotina',cefr:'A1',freq:2,
         contexts:['Eu acordo às sete horas.','Amanhã preciso de acordar cedo.']},
@@ -400,6 +412,8 @@ window.MODULES = [
     subtitle: 'Hobbys, Musik & Ausgehen',
     color: '#9333ea',
     unlocked: false,
+    prereqUnit: 8, prereqPct: 50,
+    prereqLabel: 'Benötigt Lektion 8 (gostar de + Infinitiv, Vorlieben)',
     vocabulary: [
       {id:'m7v01',pt:'o cinema',de:'das Kino',cat:'cultura',cefr:'A1',freq:2,
         contexts:['Vamos ao cinema?','O cinema fica no centro comercial.']},
@@ -456,6 +470,8 @@ window.MODULES = [
     subtitle: 'Telefonieren, E-Mails & Termine',
     color: '#0284c7',
     unlocked: false,
+    prereqUnit: 8, prereqPct: 50,
+    prereqLabel: 'Benötigt Lektion 8 (ir + Infinitiv, Zukunftsform)',
     vocabulary: [
       {id:'m8v01',pt:'o telemóvel',de:'das Handy',cat:'comunicação',cefr:'A1',freq:1,
         contexts:['Qual é o seu número de telemóvel?','O meu telemóvel não tem bateria.']},

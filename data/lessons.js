@@ -171,6 +171,13 @@ window.LESSONS = [
       examples:['Moro no Porto (= em + o Porto)','Trabalha na França (= em + a França)'],
       note:'em = in/an. Mit Artikel immer zusammenziehen.'
     },
+    {
+      id:'u1g07', type:'rule',
+      title:'Reflexive Verben (Überblick)',
+      rule:'Reflexivpronomen: me / te / se / nos / se + Verb (oder Verb-Pronomen)',
+      examples:['Eu chamo-me Ana. (Ich heiße Ana.)','Tu chamas-te João? (Heißt du João?)','Ele chama-se Pedro. (Er heißt Pedro.)','Nós chamamo-nos… (Wir heißen…)'],
+      note:'Bei reflexiven Verben kommt das Pronomen im EU-Portugiesisch NACH dem Verb mit Bindestrich (Eu levanto-me). Bei Verneinung DAVOR: Eu não me levanto. chamar-se ist dein erstes reflexives Verb!'
+    },
   ]
 },
 

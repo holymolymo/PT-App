@@ -261,6 +261,8 @@ const CardEngine = {
     const all = this.buildAll();
     const due = all.filter(c => {
       if (c.source === 'extra' && !this._isExtraUnlocked(c)) return false;
+      // Skip cards from locked modules
+      if (c.source === 'module' && !this._isModuleUnlocked(c.unit)) return false;
       const state = DB.getCardState(c.id);
       return SRS.isDue(state) && state !== null; // only previously seen cards
     });
@@ -272,15 +274,8 @@ const CardEngine = {
     const unitCards = this.forUnit(unitId);
     let unseen = unitCards.filter(c => DB.getCardState(c.id) === null);
 
-    // Also pull unseen cards from unlocked modules
-    if (typeof MODULES !== 'undefined') {
-      MODULES.forEach(mod => {
-        if (mod.unlocked && unseen.length < maxCount) {
-          const modUnseen = this.forUnit(mod.id).filter(c => DB.getCardState(c.id) === null);
-          unseen = unseen.concat(modUnseen.slice(0, 3)); // Mix in up to 3 from modules
-        }
-      });
-    }
+    // Lesson sessions are pure — no module cards mixed in.
+    // Modules are studied separately via the Learn tab module selector.
 
     // Smart interleaving: group by type, then alternate
     const buckets = {
@@ -344,21 +339,30 @@ const CardEngine = {
   // Check if unit should be unlocked (previous unit ≥ 80% mastered)
   checkUnlocks() {
     const all = this.buildAll();
+    // Book lessons: sequential unlock at 80%
     LESSONS.forEach((lesson, i) => {
       if (i === 0) return;
       const prevUnit = LESSONS[i - 1];
       const progress = DB.getUnitProgress(prevUnit.id, all);
       if (progress >= 80) lesson.unlocked = true;
     });
-    // Module unlocking: m6-m8 require unit 4+ progress
+    // Modules: unlock based on prerequisite unit progress
     if (typeof MODULES !== 'undefined') {
-      const profile = DB.getProfile();
       MODULES.forEach(mod => {
-        if (!mod.unlocked && profile.currentUnit >= 4) {
-          mod.unlocked = true;
+        if (mod.prereqUnit === null || mod.prereqUnit === undefined) {
+          mod.unlocked = true; // No prereq = always unlocked (Module 1)
+          return;
         }
+        const progress = DB.getUnitProgress(mod.prereqUnit, all);
+        mod.unlocked = progress >= (mod.prereqPct || 50);
       });
     }
+  },
+
+  _isModuleUnlocked(moduleId) {
+    if (typeof MODULES === 'undefined') return false;
+    const mod = MODULES.find(m => m.id === moduleId);
+    return mod ? mod.unlocked : false;
   },
 
   _isExtraUnlocked(card) {
@@ -405,12 +409,33 @@ const Session = {
   _recentResults: [],  // Rolling accuracy tracker (last 10)
 
   start() {
+    this._moduleId = null;
     this.stats = { correct: 0, wrong: 0, seen: 0 };
     this.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
     this._recentResults = [];
     this.startTime = Date.now();
     DB.updateStreak();
     this._startReviewPhase();
+  },
+
+  startModule(moduleId) {
+    this._moduleId = moduleId;
+    this.stats = { correct: 0, wrong: 0, seen: 0 };
+    this.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
+    this._recentResults = [];
+    this.startTime = Date.now();
+    DB.updateStreak();
+    // Module sessions: skip review, go straight to new cards from this module
+    this.phase = 'new';
+    const newCards = CardEngine.getNewCards(moduleId, 15);
+    this.queue = newCards;
+    this.currentIdx = 0;
+    if (newCards.length === 0) {
+      this._startSummary();
+      return;
+    }
+    const mod = MODULES.find(m => m.id === moduleId);
+    UI.showPhase('new', newCards.length, mod ? mod.title : '');
   },
 
   _startReviewPhase() {
@@ -603,9 +628,18 @@ const UI = {
 
       ${due > 0 ? `<div class="due-banner card"><span>📅</span><span><b>${due} Karten</b> zur Wiederholung fällig</span></div>` : ''}
 
-      <button class="btn-primary start-session-btn" onclick="App.startSession()">
-        Heute lernen →
-      </button>
+      ${seen === 0 ? `
+        <button class="btn-primary start-session-btn" onclick="App.startModuleSession('m1')" style="background:linear-gradient(135deg,#006B3C,#00914f)">
+          Erste Schritte starten →
+        </button>
+        <div class="quick-tips card" style="font-size:13px;color:var(--text2)">
+          Tipp: Starte mit den wichtigsten Überlebens-Phrasen, bevor du in die Lektionen eintauchst!
+        </div>
+      ` : `
+        <button class="btn-primary start-session-btn" onclick="App.startSession()">
+          Heute lernen →
+        </button>
+      `}
 
       <div class="quick-tips card">
         <div class="tip-title">Tipp des Tages</div>
@@ -637,10 +671,10 @@ const UI = {
   },
 
   // ── Session UI ─────────────────────────────────────────────────────────
-  showPhase(phase, totalCards) {
+  showPhase(phase, totalCards, customTitle) {
     const labels = {
       review: { title:'Wiederholung', icon:'🔄', desc:`${totalCards} fällige Karten auffrischen` },
-      new:    { title:'Neuer Stoff', icon:'✨', desc:`Neue Inhalte aus der aktuellen Lektion` }
+      new:    { title: customTitle || 'Neuer Stoff', icon:'✨', desc: customTitle ? `${totalCards} Karten aus diesem Modul` : `Neue Inhalte aus der aktuellen Lektion` }
     };
     const l = labels[phase];
     const el = document.getElementById('learn-content');
@@ -939,12 +973,13 @@ const UI = {
       const isLocked = !lesson.unlocked && lesson.id > 1 && !String(lesson.id).startsWith('m');
       const isModLocked = String(lesson.id).startsWith('m') && !lesson.unlocked;
       const locked = isLocked || isModLocked;
+      const prereqHint = locked && lesson.prereqLabel ? lesson.prereqLabel : '';
       return `
         <div class="unit-row card ${locked ? 'locked' : ''}">
           <div class="unit-num" style="background:${lesson.color}">${lesson.id}</div>
           <div class="unit-row-info">
             <div class="unit-row-title">${lesson.title}</div>
-            <div class="unit-row-sub">${unitSeen}/${unitCards} Karten</div>
+            <div class="unit-row-sub">${locked && prereqHint ? prereqHint : unitSeen + '/' + unitCards + ' Karten'}</div>
             <div class="progress-bar-wrap">
               <div class="progress-bar" style="width:${prog}%;background:${lesson.color}"></div>
             </div>
@@ -1164,21 +1199,44 @@ const App = {
 
   showLearnMenu() {
     const el = document.getElementById('learn-content');
+    CardEngine.checkUnlocks();
+    const modules = typeof MODULES !== 'undefined' ? MODULES : [];
+    const modulesHTML = modules.map(m => {
+      const locked = !m.unlocked;
+      return `
+        <button class="conv-item card ${locked ? 'locked' : ''}" ${locked ? '' : `onclick="App.startModuleSession('${m.id}')"`}>
+          <span class="conv-icon" style="font-size:24px;width:36px;height:36px;border-radius:8px;background:${m.color};display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:13px">${m.id}</span>
+          <div class="conv-info">
+            <div class="conv-title">${m.title}</div>
+            <div class="conv-sub">${locked && m.prereqLabel ? m.prereqLabel : m.subtitle}</div>
+          </div>
+          ${locked ? '<span>🔒</span>' : '<span style="color:var(--accent)">→</span>'}
+        </button>
+      `;
+    }).join('');
+
     el.innerHTML = `
       <div class="pre-session">
         <div class="mode-toggle">
           <button class="mode-btn active">Karten</button>
           <button class="mode-btn" onclick="Conversation.showList()">Gespräche</button>
         </div>
+
         <div class="pre-icon">📚</div>
-        <h2>Hey, bereit für heute?</h2>
-        <p>Lass uns loslegen! Deine 30-Minuten-Session wartet.</p>
+        <h2>Lerneinheit starten</h2>
+
+        <div class="chart-title" style="width:100%;text-align:left;margin-top:8px">Buch-Lektion</div>
         <div class="session-plan">
-          <div>🔄 <b>10 Min</b> – Wiederholung</div>
-          <div>✨ <b>15 Min</b> – Neuer Stoff</div>
-          <div>📊 <b>5 Min</b> – Auswertung</div>
+          <div>🔄 Wiederholung fälliger Karten</div>
+          <div>✨ Neuer Stoff aus der aktuellen Lektion</div>
+          <div>📊 Auswertung & Fortschritt</div>
         </div>
-        <button class="btn-primary" onclick="App.startSession()">Session starten</button>
+        <button class="btn-primary" onclick="App.startSession()">Buch-Session starten</button>
+
+        <div class="chart-title" style="width:100%;text-align:left;margin-top:16px">Themen-Module</div>
+        <div style="width:100%;display:flex;flex-direction:column;gap:8px">
+          ${modulesHTML}
+        </div>
       </div>
     `;
   },
@@ -1189,6 +1247,14 @@ const App = {
     document.getElementById('screen-learn').classList.add('active');
     document.querySelector('[data-screen="learn"]')?.classList.add('active');
     Session.start();
+  },
+
+  startModuleSession(moduleId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    document.getElementById('screen-learn').classList.add('active');
+    document.querySelector('[data-screen="learn"]')?.classList.add('active');
+    Session.startModule(moduleId);
   },
 
   exportData() {
