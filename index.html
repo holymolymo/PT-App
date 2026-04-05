@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Português">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="theme-color" content="#006B3C" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1c1c1e"  media="(prefers-color-scheme: dark)">
+
+  <title>Aprender Português</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ── Home ── -->
+  <div id="screen-home" class="screen active">
+    <div id="home-content"></div>
+  </div>
+
+  <!-- ── Lernen ── -->
+  <div id="screen-learn" class="screen">
+    <div id="learn-content">
+      <div class="pre-session">
+        <div class="pre-icon">📚</div>
+        <h2>Hey, bereit für heute?</h2>
+        <p>Lass uns loslegen! Deine 30-Minuten-Session wartet.</p>
+        <div class="session-plan">
+          <div>🔄 <b>10 Min</b> – Wiederholung fälliger Karten</div>
+          <div>✨ <b>15 Min</b> – Neuer Stoff</div>
+          <div>📊 <b>5 Min</b> – Auswertung</div>
+        </div>
+        <button class="btn-primary" onclick="App.startSession()">Session starten</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Fortschritt ── -->
+  <div id="screen-progress" class="screen">
+    <div id="progress-content"></div>
+  </div>
+
+  <!-- ── Einstellungen ── -->
+  <div id="screen-settings" class="screen">
+    <div id="settings-content"></div>
+  </div>
+
+  <!-- ── Tab Bar ── -->
+  <nav id="tab-bar">
+    <button class="tab-item active" data-screen="home">
+      <span class="tab-icon">🏠</span>
+      <span class="tab-label">Home</span>
+    </button>
+    <button class="tab-item" data-screen="learn">
+      <span class="tab-icon">📚</span>
+      <span class="tab-label">Lernen</span>
+    </button>
+    <button class="tab-item" data-screen="progress">
+      <span class="tab-icon">📊</span>
+      <span class="tab-label">Fortschritt</span>
+    </button>
+    <button class="tab-item" data-screen="settings">
+      <span class="tab-icon">⚙️</span>
+      <span class="tab-label">Einstellungen</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- Data layer -->
+<script src="data/lessons.js"></script>
+<script src="data/extra.js"></script>
+
+<!-- App layer -->
+<script src="js/sm2.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

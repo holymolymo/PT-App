@@ -1,0 +1,33 @@
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node (if ever needed)
+node_modules/
+npm-debug.log*
+
+# Build output
+dist/
+build/
+
+# Env
+.env
+.env.local
+
+# Logs
+*.log
+
+# PDF source (not needed in repo)
+*.pdf
