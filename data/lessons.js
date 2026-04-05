@@ -178,6 +178,26 @@ window.LESSONS = [
       examples:['Eu chamo-me Ana. (Ich heiße Ana.)','Tu chamas-te João? (Heißt du João?)','Ele chama-se Pedro. (Er heißt Pedro.)','Nós chamamo-nos… (Wir heißen…)'],
       note:'Bei reflexiven Verben kommt das Pronomen im EU-Portugiesisch NACH dem Verb mit Bindestrich (Eu levanto-me). Bei Verneinung DAVOR: Eu não me levanto. chamar-se ist dein erstes reflexives Verb!'
     },
+    {id:'u1g08', type:'rule', title:'Fragen bilden (Grundlagen)',
+      rule:'1) Tonhöhe heben am Satzende | 2) Fragewort + é que + Verb',
+      examples:['Fala português? ↑ (nur Tonhöhe!)','Onde é que mora? (Wo wohnen Sie?)','Como se chama? (Wie heißen Sie?)','De onde é? (Woher kommen Sie?)'],
+      note:'EU-Portugiesisch nutzt "é que" in Fragen mit Fragewörtern. Ja/Nein-Fragen nur mit Tonhöhe — keine Wortstellung wie im Deutschen!'},
+    {id:'u1g09', type:'rule', title:'Fragewörter',
+      rule:'quem (wer) | o que / o quê (was) | onde (wo) | quando (wann) | como (wie) | porquê (warum) | qual/quais (welche/r) | quanto/a/os/as (wie viel/e)',
+      examples:['Quem é? (Wer ist das?)','O que é que fazes? (Was machst du?)','Onde moras? (Wo wohnst du?)','Quando chegas? (Wann kommst du?)','Porquê? (Warum?)','Quanto custa? (Wie viel kostet es?)'],
+      note:'Wichtig: "porquê" am Satzende/allein, "por que" vor Verb. "O quê?" allein, "o que" im Satz. "Qual" bei Auswahl: "Qual é o seu nome?"'},
+    {id:'u1g10', type:'rule', title:'Ja/Nein antworten — Verb wiederholen',
+      rule:'Fala? → Falo. / Não falo. (Verb wiederholen!)',
+      examples:['É alemão? — Sou. (Ja = Verb!)','Tem filhos? — Tenho. / Não tenho.','Fala inglês? — Falo um pouco.','Gosta de Lisboa? — Gosto muito!'],
+      note:'Nur "Sim"/"Não" klingt abgehackt. Natürlicher: Verb in der 1. Person wiederholen. Das ist einer der größten Unterschiede zum Deutschen!'},
+    {id:'u1g11', type:'rule', title:'Anrede: tu / você / o senhor',
+      rule:'tu = vertraut | você = neutral (kann unhöflich sein!) | o senhor/a senhora = höflich | Am sichersten: Pronomen weglassen!',
+      examples:['Tu falas português? (du — Freunde)','O senhor fala português? (Sie — höflich)','Fala português? (Ohne Pronomen — sicherste Form!)'],
+      note:'In Portugal: "tu" für Freunde/Familie. Für Fremde NICHT "você" (kann unhöflich klingen!), sondern "o senhor/a senhora" oder einfach Pronomen weglassen.'},
+    {id:'u1g12', type:'rule', title:'Há = es gibt / seit / vor',
+      rule:'Há + Substantiv = es gibt | Há + Zeit = seit/vor',
+      examples:['Há um banco aqui? (Gibt es eine Bank hier?)','Há muitas pessoas. (Es gibt viele Leute.)','Moro aqui há dois anos. (Ich wohne hier seit 2 Jahren.)','Cheguei há três dias. (Ich kam vor 3 Tagen.)'],
+      note:'"Há" ist eines der häufigsten Wörter! Unveränderlich. Für Orte: es gibt. Für Zeit: seit/vor.'},
   ]
 },
 
@@ -355,6 +375,14 @@ window.LESSONS = [
       },
       note:'vir = kommen. venho (ich-Form mit -nho!).'
     },
+    {id:'u2g11', type:'rule', title:'Aussprache: Nasalvokale',
+      rule:'ã/õ = nasal | m/n vor Konsonant = nasal | -ão/-ões/-ãe = nasale Diphthonge',
+      examples:['mão (Hand) — nasal ão','pão / pães (Brot / Brote)','limão / limões (Zitrone / Zitronen)','irmão / irmãos (Bruder / Brüder — ãos!)'],
+      note:'Nasalvokale gibt es im Deutschen NICHT! Luft geht durch die Nase. Die 3 Plural-Formen von -ão muss man lernen: -ões (häufigste), -ães, -ãos.'},
+    {id:'u2g12', type:'rule', title:'Aussprache: lh, nh und das stumme e',
+      rule:'lh = palatales l (wie ital. gli) | nh = nasales n (wie span. ñ) | Unbetontes e = fast stumm',
+      examples:['trabalho (Arbeit) — lh wie "lj"','filho (Sohn) — lh','vinho (Wein) — nh wie "nj"','amanhã (morgen) — nh','telefone → klingt wie "tlfon"'],
+      note:'EU-Portugiesisch "verschluckt" unbetonte Vokale stark! Das macht das Hörverstehen so schwierig. Geschrieben: "telefone", gesprochen: "tlfon".'},
   ]
 },
 
@@ -421,6 +449,18 @@ window.LESSONS = [
       examples:['Ele é português. (dauerhaft)','Ele está em Lisboa. (temporär, kann sich ändern)','A Ana é bonita. (dauerhaft)','A Ana está cansada. (temporär)'],
       note:'Das ist EINER der wichtigsten Unterschiede im Portugiesischen!'
     },
+    {id:'u3g03', type:'rule', title:'Gesprächswörter (Discourse Markers)',
+      rule:'então (also/dann) | pois (ja/tja) | pronto (gut/fertig) | bom (also) | olhe (schauen Sie)',
+      examples:['Então, como estás? (Also, wie geht es dir?)','Pois é. (Ja, genau. / Tja.)','Pronto, vamos? (Gut, gehen wir?)','Bom, eu acho que... (Also, ich denke dass...)','Olhe, desculpe. (Schauen Sie, Entschuldigung.)'],
+      note:'"Pois" und "pronto" sind typisch EU-Portugiesisch! Sie füllen Gesprächspausen und zeigen Zustimmung. Ohne sie klingt man wie ein Roboter.'},
+    {id:'u3g04', type:'rule', title:'Rückfragen: não é? / pois não?',
+      rule:'Statement + não é? / certo? / sim? = Rückfrage',
+      examples:['É bonito, não é? (Schön, oder?)','Falas português, certo? (Du sprichst Portugiesisch, oder?)','Vamos amanhã, sim? (Wir gehen morgen, ja?)'],
+      note:'Wie deutsche Rückfragen "oder?" / "nicht wahr?". Sehr häufig in Gesprächen.'},
+    {id:'u3g05', type:'rule', title:'Aussprache: Das S am Wortende',
+      rule:'s am Ende/vor Konsonant = "sch" (EP!) | s zwischen Vokalen = "s" stimmhaft',
+      examples:['os amigos → klingt wie "osch amigusch"','as casas → "asch cashash"','casa → s zwischen Vokalen = stimmhaftes s','mesa, rosa → stimmhaftes s'],
+      note:'DAS Erkennungsmerkmal von EU-Portugiesisch! Jedes Wort-S am Ende wird zu "sch". Deshalb klingt EP so anders als Brasilianisch.'},
   ]
 },
 
@@ -618,6 +658,18 @@ window.LESSONS = [
       examples:['São dez horas. = 10:00','São dez e meia. = 10:30','São dez e um quarto. = 10:15','São onze menos um quarto. = 10:45'],
       note:'Nur 1 Uhr = É uma hora. Alle anderen: São... horas.'
     },
+    {id:'u4g12', type:'rule', title:'Datum sagen',
+      rule:'Tag + de + Monat + de + Jahr | 1. = primeiro, Rest = Kardinalzahl',
+      examples:['5 de abril de 2026 (fünfter April)','Primeiro de janeiro (1. Januar — einzige Ordinalzahl!)','Que dia é hoje? / A quantos estamos? (Welcher Tag ist heute?)','Dois mil e vinte e seis (2026)'],
+      note:'Nur der 1. eines Monats = "primeiro". Alle anderen Tage = normale Zahl. Jahre werden voll ausgesprochen: "dois mil e vinte e seis".'},
+    {id:'u4g13', type:'rule', title:'Konnektoren: weil, deshalb, wenn',
+      rule:'porque (weil) | por isso (deshalb) | quando (wenn/als) | se (falls)',
+      examples:['Estudo porque quero aprender. (Ich lerne, weil ich lernen will.)','Está a chover, por isso fico em casa. (Es regnet, deshalb bleibe ich zuhause.)','Quando chego a casa, janto. (Wenn ich nach Hause komme, esse ich.)','Se tiver tempo, vou ao cinema. (Falls ich Zeit habe, gehe ich ins Kino.)'],
+      note:'Diese Wörter verbinden Sätze und machen dein Portugiesisch natürlicher! "Porque" = weil, "por isso" = deshalb — nicht verwechseln!'},
+    {id:'u4g14', type:'rule', title:'Costumar + Infinitiv (Gewohnheiten)',
+      rule:'costumar + Infinitiv = normalerweise tun / pflegen zu tun',
+      examples:['Costumo acordar às 7. (Ich wache normalerweise um 7 auf.)','Costumas jantar a que horas? (Um wie viel Uhr isst du normalerweise?)','Costumamos ir ao café. (Wir gehen normalerweise ins Café.)'],
+      note:'Sehr nützlich für Routinen! Alternative zu "normalmente" + Verb.'},
   ]
 },
 
@@ -712,6 +764,26 @@ window.LESSONS = [
       examples:['Moro num apartamento. (= em + um)','Trabalho numa escola. (= em + uma)'],
       note:'Auch diese Kontraktionen sind Pflicht!'
     },
+    {id:'u5g05', type:'rule', title:'Ter de/que = müssen (Verpflichtung)',
+      rule:'ter de + Infinitiv (EU-PT) / ter que + Infinitiv = müssen',
+      examples:['Tenho de estudar. (Ich muss lernen.)','Tens de ir ao médico. (Du musst zum Arzt.)','Temos que sair às 8. (Wir müssen um 8 gehen.)'],
+      note:'"Ter de" ist stärker als "dever" (sollen). EU-PT bevorzugt "ter de", aber "ter que" geht auch. Vergleich: dever = sollte, ter de = muss, precisar de = brauchen.'},
+    {id:'u5g06', type:'rule', title:'Precisar de = brauchen / müssen',
+      rule:'precisar de + Substantiv / Infinitiv = brauchen',
+      examples:['Preciso de ajuda. (Ich brauche Hilfe.)','Preciso de ir ao banco. (Ich muss zur Bank.)','Precisas de descansar. (Du musst dich ausruhen.)'],
+      note:'Achtung: IMMER mit "de"! Nicht vergessen: preciso DE.'},
+    {id:'u5g07', type:'rule', title:'Verneinung: doppelte Negation',
+      rule:'não...nada (nichts) | não...ninguém (niemand) | não...nunca (nie) | não...nenhum (kein)',
+      examples:['Não tenho nada. (Ich habe nichts.)','Não vi ninguém. (Ich habe niemanden gesehen.)','Não vou nunca. (Ich gehe nie.)','Não tenho nenhum problema. (Ich habe kein Problem.)'],
+      note:'Portugiesisch braucht IMMER doppelte Verneinung! "Tenho nada" ist falsch. Wie im Deutschen "kein...nicht": "Não tenho nada."'},
+    {id:'u5g08', type:'rule', title:'A gente = wir (umgangssprachlich)',
+      rule:'a gente + 3. Person Singular = wir (informell)',
+      examples:['A gente vai ao cinema. (Wir gehen ins Kino.)','A gente fala português. (Wir sprechen Portugiesisch.)'],
+      note:'Im gesprochenen EU-PT ist "a gente" oft häufiger als "nós"! ABER: nimmt die 3. Person Singular (vai, fala, come), nicht die 1. Person Plural.'},
+    {id:'u5g09', type:'rule', title:'Präpositionale Pronomen: mim, ti, si',
+      rule:'Nach Präpositionen: mim (mir) | ti (dir) | si (Ihnen) | com: comigo, contigo, consigo',
+      examples:['Para mim. (Für mich.) — NICHT "para eu"!','É para ti. (Es ist für dich.)','Vem comigo! (Komm mit mir!)','Queres ir contigo. (= mit dir)'],
+      note:'Nach Präpositionen NIEMALS "eu, tu"! Sondern "mim, ti". Die Formen mit "com" sind Sonderfälle: comigo, contigo, consigo, connosco.'},
   ]
 },
 
@@ -800,6 +872,18 @@ window.LESSONS = [
       examples:['Este livro é meu. = Dieses Buch hier ist meins.','Aquela casa é bonita. = Jenes Haus dort ist schön.'],
       note:'3 Entfernungsstufen – im Deutschen nur 2 (dieser/jener).'
     },
+    {id:'u6g03', type:'rule', title:'Zahlen ab 100',
+      rule:'cem (100 allein) | cento e... (101+) | 200-900 mit Geschlecht: duzentos/duzentas | mil (1000)',
+      examples:['cem euros (100€)','cento e cinquenta (150)','duzentos gramas / duzentas pessoas (200 — Geschlecht!)','mil (1000) — KEIN Artikel!','dois mil e vinte e seis (2026)'],
+      note:'"Cem" nur bei genau 100. Ab 101 = "cento e...". 200-900 ändern sich nach Geschlecht! mil hat keinen Plural.'},
+    {id:'u6g04', type:'rule', title:'Ordinalzahlen: primeiro bis décimo',
+      rule:'1. primeiro/a | 2. segundo/a | 3. terceiro/a | 4. quarto/a | 5. quinto/a | 6. sexto/a | 7. sétimo/a | 8. oitavo/a | 9. nono/a | 10. décimo/a',
+      examples:['O primeiro andar. (Das erste Stockwerk.)','A terceira rua à direita. (Die dritte Straße rechts.)','É a primeira vez. (Es ist das erste Mal.)'],
+      note:'Ordinalzahlen passen sich an Geschlecht an! Ab der 11. verwendet man im Alltag oft Kardinalzahlen: "o piso doze" statt "o décimo segundo piso".'},
+    {id:'u6g05', type:'rule', title:'Verkleinerungsformen (-inho/-inha)',
+      rule:'Substantiv/Adjektiv + -inho/-inha = kleiner, niedlich, abmildernd',
+      examples:['Um momentinho. (Einen kleinen Moment.)','Um bocadinho. (Ein kleines Bisschen.)','Está pertinho. (Ist ganz nah.)','Um cafezinho. (Ein Kaffeechen.)','Obrigadinho! (Dankeschön!)'],
+      note:'Verkleinerungen drücken Zuneigung, Höflichkeit oder Abschwächung aus. SEHR häufig im EU-PT! "Um momentinho" klingt viel freundlicher als "um momento".'},
   ]
 },
 
@@ -879,6 +963,14 @@ window.LESSONS = [
       },
       note:'ficar = sich befinden (Ort) / bleiben / werden.'
     },
+    {id:'u7g03', type:'rule', title:'Ficar — das Multitalent (6 Bedeutungen!)',
+      rule:'1) sich befinden | 2) bleiben | 3) werden | 4) behalten | 5) stehen (Kleidung) | 6) verabreden',
+      examples:['A farmácia fica ali. (befindet sich dort)','Fico em casa hoje. (Ich bleibe zuhause.)','Fiquei contente! (Ich wurde froh!)','Fico com este. (Ich nehme/behalte diesen.)','Fica-te bem! (Steht dir gut!)','Ficamos às 9? (Machen wir 9 Uhr aus?)'],
+      note:'Ficar ist eines der wichtigsten Verben im EU-PT! Es ist das "dritte sein" neben ser und estar. ser = dauerhaft, estar = temporär, ficar = Veränderung/Ort.'},
+    {id:'u7g04', type:'rule', title:'Zeitliche Konnektoren',
+      rule:'antes de + Inf. (bevor) | depois de + Inf. (nachdem) | enquanto (während)',
+      examples:['Antes de sair, fechei a porta. (Bevor ich ging, schloss ich die Tür.)','Depois de jantar, vejo televisão. (Nach dem Abendessen schaue ich fern.)','Enquanto espero, leio o livro. (Während ich warte, lese ich.)'],
+      note:'Diese Konnektoren sind essentiell für Erzählungen! "Antes de" und "depois de" + Infinitiv — einfach und häufig.'},
   ]
 },
 
@@ -970,6 +1062,18 @@ window.LESSONS = [
       },
       note:'gostar = mögen / gerne haben. IMMER mit "de": gostar DE algo.'
     },
+    {id:'u8g05', type:'rule', title:'Vergleichen: mais/menos...do que',
+      rule:'mais + Adj. + do que = mehr als | menos + Adj. + do que = weniger als | tão...como = so...wie',
+      examples:['Lisboa é mais bonita do que o Porto? (Ist Lissabon schöner als Porto?)','O metro é menos caro do que o táxi. (Die U-Bahn ist billiger als das Taxi.)','Ele é tão alto como eu. (Er ist so groß wie ich.)'],
+      note:'Im Alltag oft ohne "do": "mais bonita que". Irreguläre Formen: bom→melhor (besser), mau→pior (schlechter), grande→maior (größer), pequeno→menor (kleiner).'},
+    {id:'u8g06', type:'rule', title:'Verb + Präposition + Infinitiv',
+      rule:'começar a (anfangen) | acabar de (gerade getan) | deixar de (aufhören) | continuar a (weitermachen)',
+      examples:['Comecei a estudar português. (Ich habe angefangen, PT zu lernen.)','Acabei de chegar. (Ich bin gerade angekommen.)','Deixei de fumar. (Ich habe aufgehört zu rauchen.)','Continuo a aprender. (Ich lerne weiter.)'],
+      note:'Diese Konstruktionen sind SUPER häufig! "Acabar de" = gerade eben (Ersatz für komplizierte Vergangenheitsformen). ACHTUNG: começar A, acabar DE — die Präposition ist wichtig!'},
+    {id:'u8g07', type:'rule', title:'Wichtige Verb-Präposition-Paare',
+      rule:'pensar em (denken an) | acreditar em (glauben an) | esperar por (warten auf) | olhar para (schauen auf) | lembrar-se de (sich erinnern an) | esquecer-se de (vergessen)',
+      examples:['Penso em ti. (Ich denke an dich.)','Estou à espera. (Ich warte. — Achtung: à espera!)','Lembro-me de tudo. (Ich erinnere mich an alles.)','Esqueci-me do nome. (Ich habe den Namen vergessen.)'],
+      note:'Portugiesische Verben brauchen oft ANDERE Präpositionen als im Deutschen! Diese Paare auswendig lernen — sie kommen ständig vor.'},
   ]
 },
 
@@ -1045,8 +1149,20 @@ window.LESSONS = [
       title:'Dever + Infinitivo',
       rule:'dever + Infinitiv = sollen / müssen',
       examples:['Deve tomar antibióticos. = Er/Sie soll Antibiotika nehmen.','Não deve comer gordura. = Er/Sie soll kein Fett essen.'],
-      note:'dever = sollen/müssen (schwächer als ter de). Também usado para moralia Verpflichtung.'
+      note:'dever = sollen/müssen (schwächer als ter de). Também usado para moralische Verpflichtung.'
     },
+    {id:'u9g03', type:'rule', title:'Imperativ (Befehle & Anweisungen)',
+      rule:'tu-Form = 3. Pers. Präsens | você-Form = Konjunktiv | Neg: não + Konjunktiv',
+      examples:['Espera! (Warte! — tu)','Fala mais devagar. (Sprich langsamer. — tu)','Venha cá. (Kommen Sie her. — você)','Não faças isso! (Mach das nicht! — tu, neg.)','Diga-me. (Sagen Sie mir. — você)'],
+      note:'Für den Alltag: tu-Imperativ = 3. Person Präsens (ele fala → fala!). Die häufigsten: Olha!, Espera!, Diz-me!, Vai!, Vem!'},
+    {id:'u9g04', type:'rule', title:'Direkte Objektpronomen: o/a/os/as',
+      rule:'me (mich) | te (dich) | o/a (ihn/sie/es) | nos (uns) | os/as (sie)',
+      examples:['Eu vejo-o. (Ich sehe ihn.)','Ela comprou-as. (Sie hat sie gekauft.)','Não o conheço. (Ich kenne ihn nicht. — VOR dem Verb bei Verneinung!)','Quem te disse? (Wer hat dir/dich gesagt? — VOR bei Fragewort!)'],
+      note:'Im EU-PT stehen Pronomen NACH dem Verb (Eu vejo-o). ABER: bei Verneinung, Fragewörtern, bestimmten Adverbien (já, também, ainda) → VOR dem Verb! Das ist eine der schwierigsten Regeln.'},
+    {id:'u9g05', type:'rule', title:'Indirekte Objektpronomen: lhe/lhes',
+      rule:'me (mir) | te (dir) | lhe (ihm/ihr/Ihnen) | nos (uns) | lhes (ihnen)',
+      examples:['Eu disse-lhe a verdade. (Ich habe ihm/ihr die Wahrheit gesagt.)','Ele deu-me um presente. (Er hat mir ein Geschenk gegeben.)','Vou telefonar-lhe. (Ich werde ihn/sie anrufen.)'],
+      note:'lhe = ihm/ihr/Ihnen — gleiche Form! Kontext verrät, wer gemeint ist.'},
   ]
 },
 
@@ -1117,6 +1233,18 @@ window.LESSONS = [
       },
       note:'ser und ir haben DIESELBEN Imperfeito-Formen: era, eras, era... Nur aus dem Kontext erkennbar.'
     },
+    {id:'u10g04', type:'rule', title:'Konditional (höfliche Bitten)',
+      rule:'Infinitiv + -ia/-ias/-ia/-íamos/-iam = würde/könnte/möchte',
+      examples:['Gostaria de um café. (Ich hätte gerne einen Kaffee.)','Poderia ajudar-me? (Könnten Sie mir helfen?)','Seria possível? (Wäre es möglich?)','Diria que sim. (Ich würde ja sagen.)'],
+      note:'Der Konditional wird aus dem Infinitiv gebildet + -ia. Für höfliche Bitten ist er eleganter als "queria" (Imperfeito). Im Alltag benutzen viele Portugiesen aber weiterhin das Imperfeito.'},
+    {id:'u10g05', type:'rule', title:'Superlativ: o mais / -íssimo',
+      rule:'o/a mais + Adj. + de = der/die -ste | Adj. + -íssimo = sehr/extrem',
+      examples:['Ela é a mais inteligente da turma. (Sie ist die Klügste der Klasse.)','Lisboa é lindíssima! (Lissabon ist wunderschön!)','Muitíssimo obrigado! (Vielen vielen Dank!)','É o melhor restaurante da cidade. (Das beste Restaurant der Stadt.)'],
+      note:'-íssimo/-íssima ist SUPER häufig im EU-PT für Begeisterung! "Boníssimo!", "Riquíssimo!". Irreguläre: bom→ótimo, mau→péssimo, grande→máximo, pequeno→mínimo.'},
+    {id:'u10g06', type:'rule', title:'Partizip als Adjektiv',
+      rule:'estar + Partizip = Zustandsbeschreibung | Irreguläre: aberto, feito, dito, escrito, posto, visto',
+      examples:['A porta está aberta. (Die Tür ist offen.)','O trabalho está feito. (Die Arbeit ist erledigt.)','Estou cansado. (Ich bin müde.)','O livro está escrito em português. (Das Buch ist auf PT geschrieben.)'],
+      note:'Viele Partizipien sind irregulär! Die wichtigsten: abrir→aberto, fazer→feito, dizer→dito, escrever→escrito, pôr→posto, ver→visto.'},
   ]
 },
 
@@ -1255,6 +1383,14 @@ window.LESSONS = [
       },
       note:'ver (sehen) im Perfekt: vi, viste...'
     },
+    {id:'u11g11', type:'rule', title:'Pronomenstellung: enclisis vs. proclisis',
+      rule:'Standard: NACH Verb (Chamo-me) | VOR Verb bei: não, quem, que, já, também, ainda, nunca',
+      examples:['Eu chamo-me Ana. (Standard: NACH dem Verb)','Não me chamo Ana. (Verneinung: VOR dem Verb)','Quem te disse? (Fragewort: VOR)','Já o vi. (Adverb já: VOR)','Também me disse. (Adverb também: VOR)'],
+      note:'DIE schwierigste Regel im EU-PT! In Brasilien steht das Pronomen immer VOR dem Verb. In Portugal NACH — außer bei "Triggern" (não, quem, que, já, também, ainda, nunca, ninguém, alguém). Im Zweifel: NACH dem Verb.'},
+    {id:'u11g12', type:'rule', title:'Wichtige Redewendungen (Perfeito)',
+      rule:'Ter razão = Recht haben | Ter saudades de = vermissen | Dar-se bem com = sich gut verstehen',
+      examples:['Tens razão! (Du hast Recht!)','Tenho saudades de Portugal. (Ich vermisse Portugal.)','Damo-nos bem. (Wir verstehen uns gut.)','Não faz mal. (Macht nichts.)','Está bem. / Tá bem. (Okay. / Alles klar.)'],
+      note:'"Saudade" ist DAS portugiesische Wort — eine tiefe, wehmütige Sehnsucht. Es gibt kein deutsches Äquivalent. "Tenho saudades tuas" = Ich vermisse dich.'},
   ]
 },
 
@@ -1324,6 +1460,14 @@ window.LESSONS = [
       examples:['O senhor pode me ajudar? = Können Sie mir helfen?','A senhora fala inglês? = Sprechen Sie Englisch?'],
       note:'Man sagt o senhor und benutzt dann die 3. Person – KEIN "Sie"-Form wie im Deutschen!'
     },
+    {id:'u12g04', type:'rule', title:'Falsche Freunde (Deutsch ↔ Portugiesisch)',
+      rule:'Wörter die ähnlich aussehen aber anderes bedeuten!',
+      examples:['carta = Brief (NICHT Karte → cartão)','Gymnasium = ginásio = Fitnessstudio','Gift = presente (NICHT "Gift" → veneno)','sensível = empfindlich (NICHT sensibel → sensato)','simpático = nett/freundlich (breiter als "sympathisch")','receita = Rezept UND Einnahmen UND Verschreibung'],
+      note:'Deutsch-Portugiesische falsche Freunde! Diese Fehler sind hartnäckig — am besten bewusst lernen.'},
+    {id:'u12g05', type:'rule', title:'Kontrastive Konnektoren',
+      rule:'mas (aber) | embora + Subjunktiv (obwohl) | apesar de + Inf. (trotz)',
+      examples:['Gosto de Lisboa, mas prefiro o Porto. (Ich mag Lissabon, aber bevorzuge Porto.)','Embora esteja cansado, vou sair. (Obwohl ich müde bin, gehe ich raus.)','Apesar de chover, fomos à praia. (Trotz des Regens gingen wir zum Strand.)'],
+      note:'"Mas" ist A1. "Embora" und "apesar de" kommen ständig vor und sind wichtig für natürliches Sprechen auf A2-Niveau.'},
   ]
 },
 
@@ -1385,6 +1529,14 @@ window.LESSONS = [
       examples:['Cheguei às 8h. = Ich kam um 8 Uhr an. (Perfeito)','A mesa estava suja. = Der Tisch war schmutzig. (Imperfeito)'],
       note:'Perfeito = Vordergrund. Imperfeito = Hintergrund.'
     },
+    {id:'u13g03', type:'rule', title:'Höflich beschweren: Strategie',
+      rule:'1) Desculpe, mas... | 2) Problem benennen | 3) Lösung vorschlagen',
+      examples:['Desculpe, mas a comida está fria. (Entschuldigung, aber das Essen ist kalt.)','Importa-se de trocar? (Würde es Ihnen etwas ausmachen zu tauschen?)','Gostaria de falar com o gerente. (Ich möchte gerne mit dem Manager sprechen.)'],
+      note:'In Portugal beschwert man sich immer diplomatisch! "Desculpe, mas..." ist der Standard-Einstieg. Nie direkt angreifen. Das "livro de reclamações" ist gesetzlich Pflicht in jedem Betrieb!'},
+    {id:'u13g04', type:'rule', title:'Se + Präsens (einfache Bedingung)',
+      rule:'se + Präsens, Präsens = wenn..., dann...',
+      examples:['Se chover, fico em casa. (Wenn es regnet, bleibe ich zuhause.)','Se quiseres, podemos ir juntos. (Wenn du willst, können wir zusammen gehen.)','Se houver tempo, vamos ao museu. (Wenn Zeit ist, gehen wir ins Museum.)'],
+      note:'Einfache Bedingungssätze mit "se" + Präsens sind A2. Für höfliche Bitten: "Se não se importa..." (Wenn es Ihnen nichts ausmacht...).'},
   ]
 },
 
@@ -1452,6 +1604,18 @@ window.LESSONS = [
       },
       note:'ter im Imperfeito: tinha = hatte. Também: havia (es gab) = Imperfeito von haver.'
     },
+    {id:'u14g04', type:'rule', title:'EU vs. BR Portugiesisch — Hauptunterschiede',
+      rule:'EU: Vokale verschluckt, Pronomen NACH Verb, estar a + Inf., tu/o senhor | BR: Vokale offen, Pronomen VOR Verb, estar + -ando, você',
+      examples:['EU: Estou a comer. → BR: Estou comendo. (Ich esse gerade.)','EU: autocarro → BR: ônibus (Bus)','EU: telemóvel → BR: celular (Handy)','EU: pequeno-almoço → BR: café da manhã (Frühstück)','EU: casa de banho → BR: banheiro (Toilette)'],
+      note:'Du lernst EU-Portugiesisch! Wenn du brasilianische Medien (Musik, Filme) hörst, wirst du Unterschiede bemerken. Beide Varianten sind korrekt — aber nicht mischen!'},
+    {id:'u14g05', type:'rule', title:'Persönlicher Infinitiv (Überblick)',
+      rule:'Infinitiv + Endung: -/es/-/mos/-em (falar, falares, falar, falarmos, falarem)',
+      examples:['Antes de eles saírem... (Bevor sie gingen...)','É importante estudarmos. (Es ist wichtig, dass wir lernen.)','Para nós entendermos. (Damit wir verstehen.)'],
+      note:'Der persönliche Infinitiv existiert NUR im Portugiesischen und Galicischen — einzigartig! Du musst ihn jetzt noch nicht aktiv benutzen, aber erkennen wenn du ihn hörst/liest.'},
+    {id:'u14g06', type:'rule', title:'Konjunktiv — erste Begegnung',
+      rule:'Feste Ausdrücke mit Konjunktiv: Espero que... | Talvez... | É preciso que...',
+      examples:['Espero que estejas bem. (Ich hoffe, dir geht es gut.)','Talvez tenha razão. (Vielleicht hat er Recht.)','É preciso que estudemos mais. (Es ist nötig, dass wir mehr lernen.)','Quero que venhas. (Ich will, dass du kommst.)'],
+      note:'Der Konjunktiv ist ein RIESIGES Thema (B1+). Für jetzt: diese festen Ausdrücke einfach als Ganzes lernen, ohne die Konjugation zu analysieren. Das kommt später!'},
   ]
 }
 
