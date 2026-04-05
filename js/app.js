@@ -305,7 +305,7 @@ const Session = {
       return;
     }
     UI.showPhase('review', dueCards.length);
-    this._showCard();
+    // _showCard() is triggered by the "Los geht's!" button in showPhase
   },
 
   _startNewPhase() {
@@ -319,7 +319,7 @@ const Session = {
       return;
     }
     UI.showPhase('new', newCards.length);
-    this._showCard();
+    // _showCard() is triggered by the "Los geht's!" button in showPhase
   },
 
   _startSummary() {
@@ -346,7 +346,7 @@ const Session = {
   _showCard() {
     if (this.currentIdx >= this.queue.length) {
       if (this.phase === 'review') {
-        UI.showPhaseTransition('new', () => this._startNewPhase());
+        UI.showPhaseTransition('new');
       } else {
         this._startSummary();
       }
@@ -510,7 +510,7 @@ const UI = {
     `;
   },
 
-  showPhaseTransition(nextPhase, onContinue) {
+  showPhaseTransition(nextPhase) {
     const el = document.getElementById('learn-content');
     const stats = Session.phaseStats.review;
     const pct = stats.correct + stats.wrong > 0
@@ -934,6 +934,12 @@ const App = {
     }
   }
 };
+
+// Expose to global scope so inline onclick handlers can reach them
+window.App = App;
+window.UI = UI;
+window.Session = Session;
+window.CardEngine = CardEngine;
 
 // Start app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => App.init());
