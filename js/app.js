@@ -2,6 +2,27 @@
 'use strict';
 
 // ══════════════════════════════════════════════════════════════════════════════
+// PRONUNCIATION HINTS — for difficult EP words
+// ══════════════════════════════════════════════════════════════════════════════
+
+const PRON_HINTS = {
+  'não':'[nãw̃]','sim':'[sĩ]','obrigado':'[obriˈgadu]','obrigada':'[obriˈgadɐ]',
+  'desculpe':'[dɨʃˈkulpɨ]','bom dia':'[bõ ˈdiɐ]','boa tarde':'[boɐ ˈtardɨ]',
+  'boa noite':'[boɐ ˈnojtɨ]','por favor':'[pur fɐˈvor]','água':'[ˈagwɐ]',
+  'trabalho':'[trɐˈbaʎu]','filho':'[ˈfiʎu]','vinho':'[ˈviɲu]','amanhã':'[ɐmɐˈɲã]',
+  'também':'[tɐ̃ˈbɐ̃j̃]','pão':'[pãw̃]','mão':'[mãw̃]','irmão':'[irˈmãw̃]',
+  'coração':'[kurɐˈsãw̃]','informação':'[ĩfurmɐˈsãw̃]','estação':'[ɨʃtɐˈsãw̃]',
+  'telemóvel':'[tɛlɨˈmɔvɛl]','autocarro':'[awtɔˈkaru]','pequeno-almoço':'[pɨˈkenu alˈmosu]',
+  'casa de banho':'[ˈkazɐ dɨ ˈbaɲu]','saudade':'[sawˈdadɨ]',
+  'chave':'[ˈʃavɨ]','conhecer':'[kuɲɨˈser]','exercício':'[ezɨrˈsisju]',
+  'cozinha':'[kuˈziɲɐ]','hoje':'[ˈoʒɨ]','gente':'[ˈʒẽtɨ]',
+  'lhe':'[ʎɨ]','senhor':'[sɨˈɲor]','senhora':'[sɨˈɲorɐ]',
+  'ontem':'[ˈõtɐ̃j̃]','homem':'[ˈɔmɐ̃j̃]','viagem':'[viˈaʒɐ̃j̃]',
+  'começar':'[kumɨˈsar]','esquecer':'[ɨʃkɨˈser]','querer':'[kɨˈrer]',
+  'perceber':'[pɨrsɨˈber]','dizer':'[diˈzer]','fazer':'[fɐˈzer]',
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
 // CARD ENGINE — Build flat card list from lesson + extra data
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -111,15 +132,15 @@ const CardEngine = {
     (EXTRA_VOCAB || []).forEach(v => {
       cards.push({
         id: v.id + '_ptde',
-        unit: 0,
-        source: 'extra',
-        type: 'vocab',
-        dir: 'pt-de',
-        question: v.pt,
-        answer: v.de,
-        hint: v.cat,
-        explanation: v.note || null,
-        raw: v
+        unit: 0, source: 'extra', type: 'vocab', dir: 'pt-de',
+        question: v.pt, answer: v.de, hint: v.cat,
+        explanation: v.note || null, raw: v
+      });
+      cards.push({
+        id: v.id + '_dept',
+        unit: 0, source: 'extra', type: 'vocab', dir: 'de-pt',
+        question: v.de, answer: v.pt, hint: v.cat,
+        explanation: v.note || null, raw: v
       });
     });
 
@@ -727,9 +748,14 @@ const UI = {
         <div class="card-pronoun">${card.pronoun} →</div>
       `;
     } else if (isRule) {
+      // Grammar rules shown as study cards with examples — learner rates understanding
+      const exHTML = card.examples ? card.examples.slice(0,3).map(e => `<div class="rule-example">${e}</div>`).join('') : '';
       questionHTML = `
-        <div class="card-label">Grammatikregel</div>
-        <div class="card-question-text">${card.question}</div>
+        <div class="card-label">Grammatik</div>
+        <div class="card-question-text" style="font-size:20px">${card.question}</div>
+        <div class="rule-content">${card.answer}</div>
+        ${exHTML ? `<div class="rule-examples">${exHTML}</div>` : ''}
+        ${card.explanation ? `<div class="rule-note">${card.explanation}</div>` : ''}
       `;
     } else if (isContext) {
       questionHTML = `
@@ -739,16 +765,36 @@ const UI = {
       `;
     } else {
       const isDE = card.dir === 'de-pt';
+      const pronHint = !isDE ? this._getPronHint(card.question) : '';
       questionHTML = `
         <div class="card-label">${isDE ? 'Auf Portugiesisch:' : 'Was bedeutet:'}</div>
         ${card.hint ? `<div class="card-cat-badge">${card.hint}</div>` : ''}
         <div class="card-question-text">${card.question}</div>
+        ${pronHint ? `<div class="pron-hint">${pronHint}</div>` : ''}
       `;
     }
 
     // Use multiple choice for vocab/phrases, free input for conjugation/context
+    // Rule cards use self-rating (study card pattern)
     let answerHTML = '';
-    if (isConj || isRule || isContext) {
+    if (isRule) {
+      answerHTML = `
+        <div class="rule-rating">
+          <div class="rule-rating-prompt">Wie gut hast du diese Regel verstanden?</div>
+          <div class="rating-buttons">
+            <button class="rating-btn rating-again" onclick="Session.answer(Session.queue[Session.currentIdx], 1)">
+              <span class="rating-label">Nochmal</span><span class="rating-interval">Wiederhole</span>
+            </button>
+            <button class="rating-btn rating-good" onclick="Session.answer(Session.queue[Session.currentIdx], 4)">
+              <span class="rating-label">Verstanden</span><span class="rating-interval">Weiter</span>
+            </button>
+            <button class="rating-btn rating-easy" onclick="Session.answer(Session.queue[Session.currentIdx], 5)">
+              <span class="rating-label">Kann ich!</span><span class="rating-interval">Selten zeigen</span>
+            </button>
+          </div>
+        </div>
+      `;
+    } else if (isConj || isContext) {
       answerHTML = `
         <div class="answer-input-wrap">
           <input type="text" id="card-input" class="card-input"
@@ -794,11 +840,17 @@ const UI = {
   checkInput() {
     const input = document.getElementById('card-input');
     if (!input) return;
-    const userAnswer = input.value.trim().toLowerCase();
+    const userAnswer = input.value.trim();
     const card = Session.queue[Session.currentIdx];
-    const correct = card.answer.toLowerCase();
-    const isCorrect = userAnswer === correct ||
+    const correct = card.answer;
+    const isCorrect = userAnswer.toLowerCase() === correct.toLowerCase() ||
       this._normalize(userAnswer) === this._normalize(correct);
+    // Store user answer for feedback display
+    card._userAnswer = userAnswer;
+    // Check for near-miss (accent/case only)
+    if (!isCorrect && this._normalize(userAnswer) === this._normalize(correct)) {
+      card._nearMiss = 'accent'; // Only accents wrong
+    }
     this._showFeedback(card, isCorrect, isCorrect ? 4 : 1);
   },
 
@@ -822,6 +874,16 @@ const UI = {
       ? ['Super!','Sehr gut!','Genau richtig!','Das sitzt!','Perfekt!'][Math.floor(Math.random()*5)]
       : 'Fast!';
 
+    // Build user-answer diff for wrong text inputs
+    let userAnswerHTML = '';
+    if (!isCorrect && card._userAnswer) {
+      const diff = this._diffAnswer(card._userAnswer, card.answer);
+      userAnswerHTML = `<div class="feedback-user-answer">
+        <span class="feedback-user-label">Deine Antwort:</span>
+        <span class="feedback-user-text">${diff}</span>
+      </div>`;
+    }
+
     const explanationHTML = card.explanation
       ? `<div class="explanation"><span>💡</span><span>${card.explanation}</span></div>` : '';
 
@@ -838,10 +900,12 @@ const UI = {
         <div class="feedback-emoji">${emoji}</div>
         <div class="feedback-title">${msg}</div>
         ${leechBadge}
+        ${userAnswerHTML}
         <div class="feedback-answer-card">
           <div class="feedback-label">${card.type==='conjugation'?'Richtige Form:':'Richtige Antwort:'}</div>
           <div class="feedback-answer">${card.answer}</div>
           ${card.type==='conjugation'?`<div class="feedback-verb">${card.verb} (${card.tenseLabel}), ${card.pronoun}</div>`:''}
+          ${this._getPronHint(card.type==='conjugation'?card.verb:card.answer)?`<div class="pron-hint">${this._getPronHint(card.type==='conjugation'?card.verb:card.answer)}</div>`:''}
         </div>
         ${explanationHTML}
         ${examplesHTML}
@@ -1154,6 +1218,41 @@ const UI = {
 
   _normalize(s) {
     return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  },
+
+  _diffAnswer(userText, correctText) {
+    // Highlight character differences between user answer and correct answer
+    const u = userText.split('');
+    const c = correctText.toLowerCase().split('');
+    let result = '';
+    for (let i = 0; i < u.length; i++) {
+      if (i < c.length && u[i].toLowerCase() === c[i]) {
+        result += u[i];
+      } else {
+        result += `<span class="diff-wrong">${u[i]}</span>`;
+      }
+    }
+    if (result === userText) {
+      // No char-level diff found — maybe accent issue
+      return `${userText} <span class="diff-hint">(Akzente prüfen!)</span>`;
+    }
+    return result;
+  },
+
+  _getPronHint(text) {
+    if (!text) return '';
+    const lower = text.toLowerCase().trim();
+    // Try exact match
+    if (PRON_HINTS[lower]) return PRON_HINTS[lower];
+    // Strip articles (o/a/os/as/um/uma) and try again
+    const noArticle = lower.replace(/^(o|a|os|as|um|uma|uns|umas)\s+/, '').trim();
+    if (PRON_HINTS[noArticle]) return PRON_HINTS[noArticle];
+    // Try each word in the text
+    const words = lower.split(/[\s/,]+/);
+    for (const w of words) {
+      if (w.length > 2 && PRON_HINTS[w]) return PRON_HINTS[w];
+    }
+    return '';
   }
 };
 
