@@ -175,6 +175,69 @@ const CardEngine = {
       });
     });
 
+    // From topic modules
+    (typeof MODULES !== 'undefined' ? MODULES : []).forEach(mod => {
+      (mod.vocabulary || []).forEach(v => {
+        // PT → DE
+        cards.push({
+          id: v.id + '_ptde', unit: mod.id, source: 'module', type: 'vocab', dir: 'pt-de',
+          question: v.pt, answer: v.de, hint: v.cat,
+          explanation: null, cefr: v.cefr, freq: v.freq, raw: v
+        });
+        // DE → PT
+        cards.push({
+          id: v.id + '_dept', unit: mod.id, source: 'module', type: 'vocab', dir: 'de-pt',
+          question: v.de, answer: v.pt, hint: v.cat,
+          explanation: null, cefr: v.cefr, freq: v.freq, raw: v
+        });
+        // Context cards (fill-in-the-blank)
+        if (v.contexts) {
+          v.contexts.forEach((ctx, ci) => {
+            const blank = ctx.replace(new RegExp(v.pt.split('/')[0].trim().split(' ').sort((a,b)=>b.length-a.length)[0], 'i'), '___');
+            if (blank !== ctx) {
+              cards.push({
+                id: v.id + '_ctx' + ci, unit: mod.id, source: 'module', type: 'context',
+                question: blank, answer: v.pt, hint: v.cat,
+                explanation: `Vollständig: ${ctx}`, cefr: v.cefr, freq: v.freq,
+                contextSentence: ctx, raw: v
+              });
+            }
+          });
+        }
+      });
+
+      (mod.phrases || []).forEach(p => {
+        cards.push({
+          id: p.id + '_ptde', unit: mod.id, source: 'module', type: 'phrase', dir: 'pt-de',
+          question: p.pt, answer: p.de, explanation: null, raw: p
+        });
+        cards.push({
+          id: p.id + '_dept', unit: mod.id, source: 'module', type: 'phrase', dir: 'de-pt',
+          question: p.de, answer: p.pt, explanation: null, raw: p
+        });
+      });
+
+      (mod.grammar || []).forEach(g => {
+        if (g.type === 'conjugation') {
+          Object.keys(g.forms).forEach(pronoun => {
+            cards.push({
+              id: g.id + '_' + pronoun.replace(/\//g, ''),
+              unit: mod.id, source: 'module', type: 'conjugation',
+              verb: g.verb, tense: g.tense, pronoun,
+              question: `${g.verb} → ${pronoun}`, answer: g.forms[pronoun],
+              tenseLabel: this._tenseLabel(g.tense), explanation: g.note || null, raw: g
+            });
+          });
+        } else if (g.type === 'rule') {
+          cards.push({
+            id: g.id, unit: mod.id, source: 'module', type: 'rule',
+            question: g.title, answer: g.rule,
+            examples: g.examples || [], explanation: g.note || null, raw: g
+          });
+        }
+      });
+    });
+
     this._cache = cards;
     return cards;
   },
@@ -199,30 +262,77 @@ const CardEngine = {
     const due = all.filter(c => {
       if (c.source === 'extra' && !this._isExtraUnlocked(c)) return false;
       const state = DB.getCardState(c.id);
-      return SM2.isDue(state) && state !== null; // only previously seen cards
+      return SRS.isDue(state) && state !== null; // only previously seen cards
     });
     return this._shuffle(due).slice(0, maxCount);
   },
 
-  // Get new cards from the current unit
+  // Get new cards from the current unit with smart interleaving
   getNewCards(unitId, maxCount = 15) {
     const unitCards = this.forUnit(unitId);
-    const unseen = unitCards.filter(c => DB.getCardState(c.id) === null);
-    // Interleave: alternate vocab and grammar
-    const vocab = unseen.filter(c => c.type === 'vocab' || c.type === 'phrase');
-    const grammar = unseen.filter(c => c.type === 'conjugation' || c.type === 'rule');
-    const mixed = [];
-    const maxV = Math.ceil(maxCount * 0.6);
-    const maxG = maxCount - maxV;
-    vocab.slice(0, maxV).forEach((c, i) => {
-      mixed.push(c);
-      if (grammar[i]) mixed.push(grammar[i]);
-    });
-    // Fill remaining
-    grammar.slice(Math.floor(maxCount * 0.5)).forEach(c => {
-      if (mixed.length < maxCount) mixed.push(c);
-    });
-    return mixed.slice(0, maxCount);
+    let unseen = unitCards.filter(c => DB.getCardState(c.id) === null);
+
+    // Also pull unseen cards from unlocked modules
+    if (typeof MODULES !== 'undefined') {
+      MODULES.forEach(mod => {
+        if (mod.unlocked && unseen.length < maxCount) {
+          const modUnseen = this.forUnit(mod.id).filter(c => DB.getCardState(c.id) === null);
+          unseen = unseen.concat(modUnseen.slice(0, 3)); // Mix in up to 3 from modules
+        }
+      });
+    }
+
+    // Smart interleaving: group by type, then alternate
+    const buckets = {
+      vocab: unseen.filter(c => c.type === 'vocab'),
+      phrase: unseen.filter(c => c.type === 'phrase'),
+      grammar: unseen.filter(c => c.type === 'conjugation' || c.type === 'rule'),
+      context: unseen.filter(c => c.type === 'context')
+    };
+
+    const result = [];
+    let lastType = null;
+    let sameTypeCount = 0;
+    const typeOrder = ['vocab', 'grammar', 'phrase', 'context', 'vocab', 'vocab', 'grammar'];
+    let typeIdx = 0;
+
+    while (result.length < maxCount) {
+      // Pick next type from rotation
+      let picked = false;
+      for (let attempts = 0; attempts < 4; attempts++) {
+        const type = typeOrder[(typeIdx + attempts) % typeOrder.length];
+        if (buckets[type] && buckets[type].length > 0) {
+          // Direction alternation for vocab: avoid same direction in a row
+          let card;
+          if (type === 'vocab' && result.length > 0) {
+            const lastDir = result[result.length - 1].dir;
+            const opposite = buckets[type].find(c => c.dir !== lastDir);
+            card = opposite || buckets[type][0];
+            buckets[type] = buckets[type].filter(c => c !== card);
+          } else {
+            card = buckets[type].shift();
+          }
+
+          // Max 3 same-type in a row
+          if (card.type === lastType) {
+            sameTypeCount++;
+            if (sameTypeCount >= 3) { typeIdx++; continue; }
+          } else {
+            sameTypeCount = 1;
+            lastType = card.type;
+          }
+
+          result.push(card);
+          picked = true;
+          typeIdx++;
+          break;
+        }
+        typeIdx++;
+      }
+      if (!picked) break; // All buckets empty
+    }
+
+    return result.slice(0, maxCount);
   },
 
   // Determine current learning unit
@@ -235,13 +345,20 @@ const CardEngine = {
   checkUnlocks() {
     const all = this.buildAll();
     LESSONS.forEach((lesson, i) => {
-      if (i === 0) return; // First unit always unlocked
+      if (i === 0) return;
       const prevUnit = LESSONS[i - 1];
       const progress = DB.getUnitProgress(prevUnit.id, all);
-      if (progress >= 80) {
-        lesson.unlocked = true;
-      }
+      if (progress >= 80) lesson.unlocked = true;
     });
+    // Module unlocking: m6-m8 require unit 4+ progress
+    if (typeof MODULES !== 'undefined') {
+      const profile = DB.getProfile();
+      MODULES.forEach(mod => {
+        if (!mod.unlocked && profile.currentUnit >= 4) {
+          mod.unlocked = true;
+        }
+      });
+    }
   },
 
   _isExtraUnlocked(card) {
@@ -285,10 +402,12 @@ const Session = {
   stats: { correct: 0, wrong: 0, seen: 0 },
   phaseStats: { review: { correct:0, wrong:0 }, new: { correct:0, wrong:0 } },
   startTime: null,
+  _recentResults: [],  // Rolling accuracy tracker (last 10)
 
   start() {
     this.stats = { correct: 0, wrong: 0, seen: 0 };
     this.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
+    this._recentResults = [];
     this.startTime = Date.now();
     DB.updateStreak();
     this._startReviewPhase();
@@ -333,6 +452,15 @@ const Session = {
     };
     DB.saveSession(sessionData);
 
+    // Save daily stats for charts
+    DB.saveDailyStats({
+      correct: this.stats.correct,
+      wrong: this.stats.wrong,
+      seen: this.stats.seen,
+      newLearned: this.phaseStats.new.correct + this.phaseStats.new.wrong,
+      minutes: duration
+    });
+
     // Update profile
     const profile = DB.getProfile();
     profile.totalCardsReviewed += this.stats.seen;
@@ -360,7 +488,7 @@ const Session = {
   // Called when user answers a card
   answer(card, quality) {
     const state = DB.getCardState(card.id) || {};
-    const newState = SM2.calc(quality, state);
+    const newState = SRS.calc(quality, state);
     DB.setCardState(card.id, newState);
 
     const correct = quality >= 3;
@@ -368,10 +496,31 @@ const Session = {
     if (correct) this.stats.correct++; else this.stats.wrong++;
     this.phaseStats[this.phase][correct ? 'correct' : 'wrong']++;
 
+    // Rolling accuracy tracker (last 10)
+    this._recentResults.push(correct ? 1 : 0);
+    if (this._recentResults.length > 10) this._recentResults.shift();
+
     // If wrong, re-add card to end of queue (once)
     if (!correct && !card._retried) {
       const retry = { ...card, _retried: true };
       this.queue.push(retry);
+    }
+
+    // Adaptive: if accuracy drops below 65%, inject easier review cards
+    if (this.phase === 'new' && this._recentResults.length >= 5) {
+      const recentPct = this._recentResults.reduce((a,b) => a+b, 0) / this._recentResults.length;
+      if (recentPct < 0.65 && !card._easyInserted) {
+        // Insert an easy review card (already mastered) to boost confidence
+        const easyCards = CardEngine.buildAll().filter(c => {
+          const s = DB.getCardState(c.id);
+          return s && s.repetitions >= 2 && s.lastQuality >= 4 && c.type === 'vocab';
+        });
+        if (easyCards.length > 0) {
+          const easy = CardEngine._shuffle(easyCards)[0];
+          easy._easyInserted = true;
+          this.queue.splice(this.currentIdx + 1, 0, easy);
+        }
+      }
     }
 
     this.currentIdx++;
@@ -411,7 +560,7 @@ const UI = {
     const all = CardEngine.buildAll();
     const due = all.filter(c => {
       const state = DB.getCardState(c.id);
-      return SM2.isDue(state) && state !== null;
+      return SRS.isDue(state) && state !== null;
     }).length;
     const seen = all.filter(c => DB.getCardState(c.id) !== null).length;
     const unitId = CardEngine.getCurrentUnit();
@@ -533,6 +682,8 @@ const UI = {
     const isRule = card.type === 'rule';
     const pct = Math.round((progress.current - 1) / progress.total * 100);
 
+    const isContext = card.type === 'context';
+
     let questionHTML = '';
     if (isConj) {
       questionHTML = `
@@ -546,6 +697,12 @@ const UI = {
         <div class="card-label">Grammatikregel</div>
         <div class="card-question-text">${card.question}</div>
       `;
+    } else if (isContext) {
+      questionHTML = `
+        <div class="card-label">Ergänze das fehlende Wort</div>
+        ${card.hint ? `<div class="card-cat-badge">${card.hint}</div>` : ''}
+        <div class="card-question-text">${card.question}</div>
+      `;
     } else {
       const isDE = card.dir === 'de-pt';
       questionHTML = `
@@ -555,13 +712,13 @@ const UI = {
       `;
     }
 
-    // Use multiple choice for vocab/phrases, free input for conjugation
+    // Use multiple choice for vocab/phrases, free input for conjugation/context
     let answerHTML = '';
-    if (isConj || isRule) {
+    if (isConj || isRule || isContext) {
       answerHTML = `
         <div class="answer-input-wrap">
           <input type="text" id="card-input" class="card-input"
-            placeholder="${isConj ? 'Form eingeben…' : 'Antwort eingeben…'}"
+            placeholder="${isConj ? 'Form eingeben…' : isContext ? 'Fehlendes Wort…' : 'Antwort eingeben…'}"
             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
             onkeydown="if(event.key==='Enter') UI.checkInput()">
           <button class="btn-check" onclick="UI.checkInput()">Prüfen</button>
@@ -637,11 +794,16 @@ const UI = {
     const examplesHTML = card.examples && card.examples.length
       ? `<div class="examples">${card.examples.map(e=>`<div class="example">• ${e}</div>`).join('')}</div>` : '';
 
+    // Get next intervals for button labels
+    const cardState = DB.getCardState(card.id) || {};
+    const intervals = SRS.nextIntervals(cardState);
+    const leechBadge = cardState.leech ? '<div class="leech-badge">🩸 Schwierige Karte</div>' : '';
+
     el.innerHTML = `
       <div class="feedback-wrap ${isCorrect ? 'feedback-correct' : 'feedback-wrong'}">
         <div class="feedback-emoji">${emoji}</div>
         <div class="feedback-title">${msg}</div>
-        ${!isCorrect ? `<div class="feedback-wrong-answer">Du: ${Session.queue[Session.currentIdx].lastUserAnswer || '?'}</div>` : ''}
+        ${leechBadge}
         <div class="feedback-answer-card">
           <div class="feedback-label">${card.type==='conjugation'?'Richtige Form:':'Richtige Antwort:'}</div>
           <div class="feedback-answer">${card.answer}</div>
@@ -650,15 +812,21 @@ const UI = {
         ${explanationHTML}
         ${examplesHTML}
         <div class="rating-buttons">
-          <button class="rating-btn rating-again" onclick="Session.answer(Session.queue[Session.currentIdx-1||0], 1)">Nochmal</button>
-          <button class="rating-btn rating-good"  onclick="Session.answer(Session.queue[Session.currentIdx-1||0], 4)">Gut</button>
-          <button class="rating-btn rating-easy"  onclick="Session.answer(Session.queue[Session.currentIdx-1||0], 5)">Super!</button>
+          <button class="rating-btn rating-again">
+            <span class="rating-label">Nochmal</span>
+            <span class="rating-interval">${intervals.again}</span>
+          </button>
+          <button class="rating-btn rating-good">
+            <span class="rating-label">Gut</span>
+            <span class="rating-interval">${intervals.good}</span>
+          </button>
+          <button class="rating-btn rating-easy">
+            <span class="rating-label">Super!</span>
+            <span class="rating-interval">${intervals.easy}</span>
+          </button>
         </div>
       </div>
     `;
-    // Prevent double-fire by storing the card reference before currentIdx increments
-    // Rating buttons reference queue[currentIdx] but Session.answer increments after call
-    // We store a closure with the right card
     const c = card;
     el.querySelector('.rating-again').onclick = () => Session.answer(c, 1);
     el.querySelector('.rating-good').onclick  = () => Session.answer(c, 4);
@@ -754,23 +922,34 @@ const UI = {
     const profile = DB.getProfile();
     const totalPct = profile.totalCardsReviewed > 0
       ? Math.round(profile.totalCorrect / profile.totalCardsReviewed * 100) : 0;
+    const seen = all.filter(c => DB.getCardState(c.id) !== null).length;
 
-    const unitsHTML = LESSONS.map(lesson => {
+    // Streak heatmap (last 12 weeks)
+    const heatmapHTML = this._renderHeatmap(84);
+
+    // Accuracy chart (last 14 days)
+    const chartHTML = this._renderAccuracyChart(14);
+
+    // Units list
+    const allUnits = [...LESSONS, ...(typeof MODULES !== 'undefined' ? MODULES : [])];
+    const unitsHTML = allUnits.map(lesson => {
       const prog = DB.getUnitProgress(lesson.id, all);
       const unitCards = all.filter(c => c.unit === lesson.id).length;
-      const seen = all.filter(c => c.unit === lesson.id && DB.getCardState(c.id)).length;
-      const isLocked = !lesson.unlocked && lesson.id > 1;
+      const unitSeen = all.filter(c => c.unit === lesson.id && DB.getCardState(c.id)).length;
+      const isLocked = !lesson.unlocked && lesson.id > 1 && !String(lesson.id).startsWith('m');
+      const isModLocked = String(lesson.id).startsWith('m') && !lesson.unlocked;
+      const locked = isLocked || isModLocked;
       return `
-        <div class="unit-row card ${isLocked ? 'locked' : ''}">
+        <div class="unit-row card ${locked ? 'locked' : ''}">
           <div class="unit-num" style="background:${lesson.color}">${lesson.id}</div>
           <div class="unit-row-info">
             <div class="unit-row-title">${lesson.title}</div>
-            <div class="unit-row-sub">${seen}/${unitCards} Karten gesehen</div>
+            <div class="unit-row-sub">${unitSeen}/${unitCards} Karten</div>
             <div class="progress-bar-wrap">
               <div class="progress-bar" style="width:${prog}%;background:${lesson.color}"></div>
             </div>
           </div>
-          <div class="unit-row-pct">${isLocked ? '🔒' : prog + '%'}</div>
+          <div class="unit-row-pct">${locked ? '🔒' : prog + '%'}</div>
         </div>
       `;
     }).join('');
@@ -779,38 +958,141 @@ const UI = {
       <div class="progress-header">
         <h2>Dein Fortschritt</h2>
         <div class="overall-stats">
-          <div class="stat-box"><span>${profile.streak}</span><span>🔥 Streak</span></div>
-          <div class="stat-box"><span>${profile.sessionsCompleted}</span><span>Sessions</span></div>
-          <div class="stat-box"><span>${totalPct}%</span><span>Genauigkeit</span></div>
+          <div class="stat-box">
+            <span class="stat-num" style="color:var(--orange)">${profile.streak}</span>
+            <span class="stat-lbl">Streak</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-num">${seen}</span>
+            <span class="stat-lbl">Gelernt</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-num" style="color:${totalPct>=70?'var(--green)':totalPct>=40?'var(--orange)':'var(--red)'}">${totalPct}%</span>
+            <span class="stat-lbl">Genauigkeit</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-num">${profile.sessionsCompleted}</span>
+            <span class="stat-lbl">Sessions</span>
+          </div>
         </div>
       </div>
+
+      <div class="chart-section">
+        <div class="chart-title">Aktivität</div>
+        ${heatmapHTML}
+      </div>
+
+      ${chartHTML}
+
+      <div class="chart-section">
+        <div class="chart-title">Lektionen & Module</div>
+      </div>
       <div class="units-list">${unitsHTML}</div>
+    `;
+  },
+
+  _renderHeatmap(days) {
+    const studyDates = DB.getStudyDates(days);
+    const weeks = Math.ceil(days / 7);
+    const dayLabels = ['Mo','','Mi','','Fr','','So'];
+    let cells = '';
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - days + 1);
+    // Adjust to Monday
+    const startDay = startDate.getDay();
+    const offset = startDay === 0 ? 6 : startDay - 1;
+    startDate.setDate(startDate.getDate() - offset);
+
+    for (let d = 0; d < weeks * 7; d++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + d);
+      const dateStr = date.toISOString().split('T')[0];
+      const count = studyDates[dateStr] || 0;
+      const todayStr = today.toISOString().split('T')[0];
+      const isFuture = dateStr > todayStr;
+      let level = 0;
+      if (count > 0) level = 1;
+      if (count >= 10) level = 2;
+      if (count >= 25) level = 3;
+      if (count >= 50) level = 4;
+      const col = Math.floor(d / 7);
+      const row = d % 7;
+      cells += `<rect x="${col * 15}" y="${row * 15}" width="12" height="12" rx="3"
+        class="heatmap-cell heatmap-${isFuture ? 'empty' : 'l' + level}"
+        ${!isFuture && count > 0 ? `data-date="${dateStr}" data-count="${count}"` : ''}/>`;
+    }
+
+    return `
+      <div class="heatmap-wrap">
+        <svg width="${weeks * 15}" height="105" viewBox="0 0 ${weeks * 15} 105">
+          ${cells}
+        </svg>
+      </div>
+    `;
+  },
+
+  _renderAccuracyChart(days) {
+    const data = DB.getDailyStatsRange(days);
+    const hasData = data.some(d => d.seen > 0);
+    if (!hasData) return '';
+
+    const maxSeen = Math.max(...data.map(d => d.seen || 0), 1);
+    const barWidth = Math.floor(100 / days);
+
+    const bars = data.map((d, i) => {
+      const height = d.seen ? Math.max(4, (d.seen / maxSeen) * 80) : 0;
+      const pct = d.seen > 0 ? Math.round((d.correct || 0) / d.seen * 100) : 0;
+      const color = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--orange)' : 'var(--red)';
+      const dayLabel = new Date(d.date).toLocaleDateString('de', {weekday:'narrow'});
+      return `
+        <div class="bar-col" style="width:${barWidth}%">
+          <div class="bar-fill" style="height:${height}%;background:${d.seen ? color : 'transparent'}"></div>
+          <div class="bar-label">${dayLabel}</div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="chart-section">
+        <div class="chart-title">Letzte ${days} Tage</div>
+        <div class="bar-chart">${bars}</div>
+      </div>
     `;
   },
 
   // ── Settings Screen ────────────────────────────────────────────────────
   renderSettings() {
     const el = document.getElementById('settings-content');
+    const profile = DB.getProfile();
+    const currentTheme = profile.theme || 'dark';
     el.innerHTML = `
       <div class="settings-header"><h2>Einstellungen</h2></div>
       <div class="settings-list">
         <div class="settings-section">
+          <div class="settings-label">Erscheinungsbild</div>
+          <div class="theme-toggle">
+            <button class="theme-option ${currentTheme==='dark'?'active':''}" onclick="App.setTheme('dark')">Dunkel</button>
+            <button class="theme-option ${currentTheme==='light'?'active':''}" onclick="App.setTheme('light')">Hell</button>
+            <button class="theme-option ${currentTheme==='auto'?'active':''}" onclick="App.setTheme('auto')">Auto</button>
+          </div>
+        </div>
+        <div class="settings-section">
           <div class="settings-label">Daten</div>
-          <button class="settings-btn" onclick="App.exportData()">📤 Daten exportieren</button>
-          <button class="settings-btn" onclick="App.importData()">📥 Daten importieren</button>
-          <button class="settings-btn danger" onclick="App.resetProgress()">⚠️ Fortschritt zurücksetzen</button>
+          <button class="settings-btn" onclick="App.exportData()">Daten exportieren</button>
+          <button class="settings-btn" onclick="App.importData()">Daten importieren</button>
+          <button class="settings-btn danger" onclick="App.resetProgress()">Fortschritt zurücksetzen</button>
         </div>
         <div class="settings-section">
-          <div class="settings-label">App-Info</div>
-          <div class="settings-info">Aprender Português 1<br>Version 1.0<br>Europäisches Portugiesisch A1/A2</div>
+          <div class="settings-label">App</div>
+          <div class="settings-info">Aprender Português<br>Version 2.0<br>Europäisches Portugiesisch A1/A2<br>${CardEngine.buildAll().length} Lernkarten</div>
         </div>
         <div class="settings-section">
-          <div class="settings-label">Hilfe</div>
+          <div class="settings-label">Bewertungs-System</div>
           <div class="settings-info">
-            <b>Bewertungs-System:</b><br>
-            🔴 Nochmal = Karte kommt morgen wieder<br>
-            🟡 Gut = In einigen Tagen<br>
-            🟢 Super! = In einigen Wochen
+            <b>Nochmal</b> — Karte wird kurz wiederholt<br>
+            <b>Gut</b> — Normaler Wiederholungsrhythmus<br>
+            <b>Super!</b> — Längeres Intervall bis zur nächsten Wiederholung
           </div>
         </div>
       </div>
@@ -846,6 +1128,13 @@ const UI = {
 
 const App = {
   init() {
+    // Initialize storage (run migrations)
+    DB.init();
+
+    // Apply saved theme
+    const profile = DB.getProfile();
+    document.documentElement.setAttribute('data-theme', profile.theme || 'dark');
+
     // Register service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').catch(() => {});
@@ -861,19 +1150,7 @@ const App = {
           document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
           document.getElementById('screen-learn').classList.add('active');
           btn.classList.add('active');
-          document.getElementById('learn-content').innerHTML = `
-            <div class="pre-session">
-              <div class="pre-icon">📚</div>
-              <h2>Hey, bereit für heute?</h2>
-              <p>Lass uns loslegen! Deine 30-Minuten-Session wartet.</p>
-              <div class="session-plan">
-                <div>🔄 <b>10 Min</b> – Wiederholung</div>
-                <div>✨ <b>15 Min</b> – Neuer Stoff</div>
-                <div>📊 <b>5 Min</b> – Auswertung</div>
-              </div>
-              <button class="btn-primary" onclick="App.startSession()">Session starten</button>
-            </div>
-          `;
+          App.showLearnMenu();
         } else {
           UI.navigateTo(screen);
         }
@@ -883,6 +1160,27 @@ const App = {
     // Init data
     CardEngine.checkUnlocks();
     UI.renderHome();
+  },
+
+  showLearnMenu() {
+    const el = document.getElementById('learn-content');
+    el.innerHTML = `
+      <div class="pre-session">
+        <div class="mode-toggle">
+          <button class="mode-btn active">Karten</button>
+          <button class="mode-btn" onclick="Conversation.showList()">Gespräche</button>
+        </div>
+        <div class="pre-icon">📚</div>
+        <h2>Hey, bereit für heute?</h2>
+        <p>Lass uns loslegen! Deine 30-Minuten-Session wartet.</p>
+        <div class="session-plan">
+          <div>🔄 <b>10 Min</b> – Wiederholung</div>
+          <div>✨ <b>15 Min</b> – Neuer Stoff</div>
+          <div>📊 <b>5 Min</b> – Auswertung</div>
+        </div>
+        <button class="btn-primary" onclick="App.startSession()">Session starten</button>
+      </div>
+    `;
   },
 
   startSession() {
@@ -925,6 +1223,14 @@ const App = {
     input.click();
   },
 
+  setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const profile = DB.getProfile();
+    profile.theme = theme;
+    DB.saveProfile(profile);
+    UI.renderSettings();
+  },
+
   resetProgress() {
     if (confirm('Wirklich ALLES zurücksetzen? Das kann nicht rückgängig gemacht werden!')) {
       DB.clearAll();
@@ -935,11 +1241,216 @@ const App = {
   }
 };
 
+// ══════════════════════════════════════════════════════════════════════════════
+// CONVERSATION ENGINE — Scaffolded dialogue practice
+// ══════════════════════════════════════════════════════════════════════════════
+
+const Conversation = {
+  current: null,
+  nodeIdx: 0,
+  messages: [],
+  score: { correct: 0, total: 0 },
+
+  showList() {
+    const el = document.getElementById('learn-content');
+    const convs = typeof CONVERSATIONS !== 'undefined' ? CONVERSATIONS : [];
+    const listHTML = convs.map(c => `
+      <button class="conv-item card" onclick="Conversation.start('${c.id}')">
+        <span class="conv-icon">${c.icon}</span>
+        <div class="conv-info">
+          <div class="conv-title">${c.title}</div>
+          <div class="conv-sub">${c.subtitle}</div>
+        </div>
+        <span class="conv-diff">${c.difficulty}</span>
+      </button>
+    `).join('');
+
+    el.innerHTML = `
+      <div class="conv-header">
+        <div class="mode-toggle">
+          <button class="mode-btn" onclick="App.showLearnMenu()">Karten</button>
+          <button class="mode-btn active">Gespräche</button>
+        </div>
+        <h2>Gespräche üben</h2>
+        <p style="color:var(--text2);font-size:14px;margin-top:4px">Lerne durch echte Dialoge</p>
+      </div>
+      <div class="conv-list">${listHTML}</div>
+    `;
+  },
+
+  start(convId) {
+    const convs = typeof CONVERSATIONS !== 'undefined' ? CONVERSATIONS : [];
+    this.current = convs.find(c => c.id === convId);
+    if (!this.current) return;
+    this.nodeIdx = 0;
+    this.messages = [];
+    this.score = { correct: 0, total: 0 };
+    this._processNode(this.current.nodes[0].id);
+  },
+
+  _findNode(nodeId) {
+    return this.current.nodes.find(n => n.id === nodeId);
+  },
+
+  _processNode(nodeId) {
+    if (nodeId === 'end') {
+      this._showEnd();
+      return;
+    }
+    const node = this._findNode(nodeId);
+    if (!node) return;
+
+    if (node.speaker === 'npc' && node.type === 'say') {
+      this.messages.push({ speaker: 'npc', pt: node.pt, de: node.de });
+      this._render();
+      // Auto-advance after short delay
+      setTimeout(() => this._processNode(node.next), 800);
+    } else if (node.speaker === 'learner') {
+      this.messages.push({ speaker: 'prompt', text: node.prompt });
+      this._render(node);
+    }
+  },
+
+  selectOption(nodeId, optIdx) {
+    const node = this._findNode(nodeId);
+    const opt = node.options[optIdx];
+    this.score.total++;
+    // Remove prompt
+    this.messages = this.messages.filter(m => m.speaker !== 'prompt');
+
+    if (opt.correct) {
+      this.score.correct++;
+      this.messages.push({ speaker: 'learner', pt: opt.pt, de: opt.de });
+      this._render();
+      setTimeout(() => this._processNode(opt.next || node.next), 600);
+    } else {
+      this.messages.push({ speaker: 'learner', pt: opt.pt, de: opt.de, wrong: true });
+      this.messages.push({ speaker: 'system', text: opt.feedback });
+      this._render();
+      // Show prompt again after delay
+      setTimeout(() => {
+        this.messages = this.messages.filter(m => m.speaker !== 'system');
+        this._processNode(nodeId);
+      }, 2000);
+    }
+  },
+
+  submitText(nodeId) {
+    const input = document.getElementById('conv-input');
+    if (!input) return;
+    const text = input.value.trim().toLowerCase();
+    if (!text) return;
+
+    const node = this._findNode(nodeId);
+    this.score.total++;
+    // Remove prompt
+    this.messages = this.messages.filter(m => m.speaker !== 'prompt');
+
+    // Check keywords
+    const normalized = UI._normalize(text);
+    const matched = node.keywords.some(kw => normalized.includes(UI._normalize(kw)));
+
+    this.messages.push({ speaker: 'learner', pt: input.value, wrong: !matched });
+
+    if (matched) {
+      this.score.correct++;
+      this._render();
+      setTimeout(() => this._processNode(node.next), 600);
+    } else {
+      this.messages.push({ speaker: 'system', text: `Tipp: ${node.hint || node.answer}` });
+      this._render();
+      setTimeout(() => {
+        this.messages = this.messages.filter(m => m.speaker !== 'system');
+        this._processNode(nodeId);
+      }, 2500);
+    }
+  },
+
+  _render(activeNode) {
+    const el = document.getElementById('learn-content');
+    const msgsHTML = this.messages.map(m => {
+      if (m.speaker === 'npc') {
+        return `<div class="chat-bubble chat-npc">
+          <div class="chat-pt">${m.pt}</div>
+          <div class="chat-de">${m.de}</div>
+        </div>`;
+      }
+      if (m.speaker === 'learner') {
+        return `<div class="chat-bubble chat-learner ${m.wrong ? 'chat-wrong' : ''}">
+          <div class="chat-pt">${m.pt}</div>
+          ${m.de ? `<div class="chat-de">${m.de}</div>` : ''}
+        </div>`;
+      }
+      if (m.speaker === 'prompt') {
+        return `<div class="chat-prompt">${m.text}</div>`;
+      }
+      if (m.speaker === 'system') {
+        return `<div class="chat-system">${m.text}</div>`;
+      }
+      return '';
+    }).join('');
+
+    let inputHTML = '';
+    if (activeNode && activeNode.type === 'choose') {
+      inputHTML = `<div class="chat-choices">
+        ${activeNode.options.map((opt, i) => `
+          <button class="chat-choice-btn" onclick="Conversation.selectOption('${activeNode.id}', ${i})">${opt.pt}</button>
+        `).join('')}
+      </div>`;
+    } else if (activeNode && activeNode.type === 'write') {
+      inputHTML = `<div class="chat-input-wrap">
+        <input type="text" id="conv-input" class="chat-input" placeholder="Antwort schreiben..."
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+          onkeydown="if(event.key==='Enter') Conversation.submitText('${activeNode.id}')">
+        <button class="chat-send-btn" onclick="Conversation.submitText('${activeNode.id}')">→</button>
+      </div>`;
+    }
+
+    el.innerHTML = `
+      <div class="chat-header">
+        <button class="btn-end-session" onclick="Conversation.showList()">←</button>
+        <div class="chat-header-info">
+          <span>${this.current.icon} ${this.current.title}</span>
+          <span class="chat-diff">${this.current.difficulty}</span>
+        </div>
+      </div>
+      <div class="chat-messages" id="chat-messages">${msgsHTML}</div>
+      ${inputHTML}
+    `;
+
+    // Scroll to bottom
+    const msgs = document.getElementById('chat-messages');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+
+    // Focus input
+    if (activeNode && activeNode.type === 'write') {
+      setTimeout(() => document.getElementById('conv-input')?.focus(), 100);
+    }
+  },
+
+  _showEnd() {
+    const pct = this.score.total > 0 ? Math.round(this.score.correct / this.score.total * 100) : 0;
+    const el = document.getElementById('learn-content');
+    el.innerHTML = `
+      <div class="conv-end">
+        <div class="feedback-emoji">🎉</div>
+        <h2>Gespräch beendet!</h2>
+        <div class="result-circle ${pct>=70?'green':pct>=40?'orange':'red'}">${pct}%</div>
+        <p>${this.score.correct} von ${this.score.total} richtig</p>
+        <p class="motivate">${UI._motivate(pct)}</p>
+        <button class="btn-primary" onclick="Conversation.start('${this.current.id}')">Nochmal üben</button>
+        <button class="btn-secondary" onclick="Conversation.showList()" style="margin-top:8px">Zurück zur Liste</button>
+      </div>
+    `;
+  }
+};
+
 // Expose to global scope so inline onclick handlers can reach them
 window.App = App;
 window.UI = UI;
 window.Session = Session;
 window.CardEngine = CardEngine;
+window.Conversation = Conversation;
 
 // Start app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => App.init());
