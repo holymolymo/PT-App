@@ -333,5 +333,73 @@ window.CONVERSATIONS = [
         keywords:['sexta','até','beijin','tchau'],hint:'Até sexta! / Beijinhos!',
         answer:'Até sexta! Beijinhos!',next:'end'},
     ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 11. In der Apotheke
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    id: 'conv11',
+    title: 'Na Farmácia',
+    subtitle: 'In der Apotheke',
+    icon: '💊',
+    color: '#059669',
+    difficulty: 'A2',
+    nodes: [
+      {id:'c11n1',speaker:'npc',type:'say',pt:'Boa tarde! Em que posso ajudar?',de:'Guten Tag! Wie kann ich helfen?',next:'c11n2'},
+      {id:'c11n2',speaker:'learner',type:'choose',prompt:'Du hast Kopfschmerzen. Frage nach einem Mittel.',
+        options:[
+          {pt:'Tem alguma coisa para dores de cabeça?',de:'Haben Sie etwas gegen Kopfschmerzen?',correct:true,next:'c11n3'},
+          {pt:'Dói-me a cabeça.',de:'Mir tut der Kopf weh.',correct:false,feedback:'Gut formuliert, aber in der Apotheke fragst du besser direkt: "Tem alguma coisa para...?" — das ist die Standardfrage!',next:'c11n2'},
+        ],next:'c11n3'},
+      {id:'c11n3',speaker:'npc',type:'say',pt:'Sim, temos paracetamol e ibuprofeno. Tem alguma alergia a medicamentos?',de:'Ja, wir haben Paracetamol und Ibuprofen. Haben Sie eine Medikamentenallergie?',next:'c11n4'},
+      {id:'c11n4',speaker:'learner',type:'choose',prompt:'Sage, dass du keine Allergien hast und frage nach der Einnahme',
+        options:[
+          {pt:'Não, nenhuma alergia. Como é que se toma?',de:'Nein, keine Allergie. Wie nimmt man das ein?',correct:true,next:'c11n5'},
+          {pt:'Não.',de:'Nein.',correct:false,feedback:'Frage auch gleich nach der Einnahme! "Como é que se toma?" = Wie nimmt man das ein?',next:'c11n4'},
+        ],next:'c11n5'},
+      {id:'c11n5',speaker:'npc',type:'say',pt:'Tome um comprimido de 8 em 8 horas, depois das refeições. Não tome mais de três por dia.',de:'Nehmen Sie eine Tablette alle 8 Stunden, nach den Mahlzeiten. Nicht mehr als drei pro Tag.',next:'c11n6'},
+      {id:'c11n6',speaker:'learner',type:'write',prompt:'Frage, ob du dafür ein Rezept brauchst',
+        keywords:['receita','preciso','precisa'],hint:'Preciso de receita...?',
+        answer:'Preciso de receita para isto?',next:'c11n7'},
+      {id:'c11n7',speaker:'npc',type:'say',pt:'Não, este medicamento não precisa de receita. São quatro euros e cinquenta.',de:'Nein, dieses Medikament ist rezeptfrei. Das macht 4,50 Euro.',next:'c11n8'},
+      {id:'c11n8',speaker:'learner',type:'write',prompt:'Bedanke dich und verabschiede dich',
+        keywords:['obrigad','dia','tarde'],hint:'Obrigado/a! Boa tarde!',
+        answer:'Muito obrigado! Boa tarde!',next:'end'},
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 12. Wohnung suchen
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    id: 'conv12',
+    title: 'Procurar Apartamento',
+    subtitle: 'Eine Wohnung besichtigen',
+    icon: '🏠',
+    color: '#64748b',
+    difficulty: 'A2',
+    nodes: [
+      {id:'c12n1',speaker:'npc',type:'say',pt:'Boa tarde! Vem ver o apartamento?',de:'Guten Tag! Sie kommen, die Wohnung zu besichtigen?',next:'c12n2'},
+      {id:'c12n2',speaker:'learner',type:'choose',prompt:'Bestätige und frage nach der Miete',
+        options:[
+          {pt:'Sim! Quanto é a renda mensal?',de:'Ja! Wie hoch ist die monatliche Miete?',correct:true,next:'c12n3'},
+          {pt:'Sim, quero ver.',de:'Ja, ich möchte sehen.',correct:false,feedback:'Gut, aber frage gleich nach der Miete! "Quanto é a renda mensal?" ist die wichtigste Frage.',next:'c12n2'},
+        ],next:'c12n3'},
+      {id:'c12n3',speaker:'npc',type:'say',pt:'A renda é seiscentos euros por mês. É um T1 mobilado, com varanda.',de:'Die Miete ist 600 Euro im Monat. Es ist eine möblierte 1-Zimmer-Wohnung mit Balkon.',next:'c12n4'},
+      {id:'c12n4',speaker:'learner',type:'write',prompt:'Frage, ob die Nebenkosten in der Miete enthalten sind',
+        keywords:['contas','incluid','renda'],hint:'As contas estão...?',
+        answer:'As contas estão incluídas na renda?',next:'c12n5'},
+      {id:'c12n5',speaker:'npc',type:'say',pt:'A água e o condomínio estão incluídos. A luz e o gás são à parte.',de:'Wasser und Hausgeld sind inklusive. Strom und Gas kommen extra.',next:'c12n6'},
+      {id:'c12n6',speaker:'learner',type:'choose',prompt:'Frage nach der Kaution und dem Vertrag',
+        options:[
+          {pt:'E a fiança? Qual é o prazo do contrato?',de:'Und die Kaution? Wie lang ist die Vertragslaufzeit?',correct:true,next:'c12n7'},
+          {pt:'Está bem.',de:'Okay.',correct:false,feedback:'Frage lieber nach den wichtigen Details! "A fiança" (Kaution) und "o prazo do contrato" (Vertragslaufzeit).',next:'c12n6'},
+        ],next:'c12n7'},
+      {id:'c12n7',speaker:'npc',type:'say',pt:'A fiança é de um mês. O contrato é por um ano, renovável.',de:'Die Kaution ist ein Monat. Der Vertrag läuft ein Jahr, verlängerbar.',next:'c12n8'},
+      {id:'c12n8',speaker:'learner',type:'write',prompt:'Sage, dass dir die Wohnung gefällt und du interessiert bist',
+        keywords:['gost','interess','apart','bonit'],hint:'Gosto muito... / Estou interessado/a...',
+        answer:'Gosto muito do apartamento. Estou interessado!',next:'end'},
+    ]
   }
 ];
