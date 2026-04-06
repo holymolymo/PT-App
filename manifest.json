@@ -2,10 +2,10 @@
   "name": "Aprender Português",
   "short_name": "Português",
   "description": "Europäisches Portugiesisch lernen – A1/A2",
-  "start_url": "/index.html",
+  "start_url": ".",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
+  "background_color": "#000000",
   "theme_color": "#006B3C",
   "icons": [
     {
@@ -28,5 +28,5 @@
   ],
   "categories": ["education"],
   "lang": "de",
-  "scope": "/"
+  "scope": "."
 }

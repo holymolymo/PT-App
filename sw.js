@@ -1,20 +1,20 @@
-// Service Worker – Aprender Português PWA v2.0
-const CACHE_NAME = 'pt-app-v2';
+// Service Worker – Aprender Português PWA v2.1
+const CACHE_NAME = 'pt-app-v2.1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/js/srs.js',
-  '/js/storage.js',
-  '/js/app.js',
-  '/data/lessons.js',
-  '/data/extra.js',
-  '/data/modules.js',
-  '/data/conversations.js',
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png'
+  './',
+  './index.html',
+  './css/style.css',
+  './js/srs.js',
+  './js/storage.js',
+  './js/app.js',
+  './data/lessons.js',
+  './data/extra.js',
+  './data/modules.js',
+  './data/conversations.js',
+  './manifest.json',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', event => {
