@@ -1465,19 +1465,60 @@ const Conversation = {
   messages: [],
   score: { correct: 0, total: 0 },
 
+  _getConvProgress(convId) {
+    const raw = localStorage.getItem('ptapp_conv_' + convId);
+    return raw ? JSON.parse(raw) : null;
+  },
+
+  _saveConvProgress(convId, score) {
+    const existing = this._getConvProgress(convId) || { attempts: 0, bestPct: 0 };
+    const pct = score.total > 0 ? Math.round(score.correct / score.total * 100) : 0;
+    localStorage.setItem('ptapp_conv_' + convId, JSON.stringify({
+      attempts: existing.attempts + 1,
+      bestPct: Math.max(existing.bestPct, pct),
+      lastPct: pct,
+      lastDate: new Date().toISOString().split('T')[0]
+    }));
+  },
+
   showList() {
     const el = document.getElementById('learn-content');
     const convs = typeof CONVERSATIONS !== 'undefined' ? CONVERSATIONS : [];
-    const listHTML = convs.map(c => `
-      <button class="conv-item card" onclick="Conversation.start('${c.id}')">
-        <span class="conv-icon">${c.icon}</span>
-        <div class="conv-info">
-          <div class="conv-title">${c.title}</div>
-          <div class="conv-sub">${c.subtitle}</div>
-        </div>
-        <span class="conv-diff">${c.difficulty}</span>
-      </button>
-    `).join('');
+
+    // Sort: unplayed first, then by lowest score, then played
+    const sorted = [...convs].sort((a, b) => {
+      const pa = this._getConvProgress(a.id);
+      const pb = this._getConvProgress(b.id);
+      if (!pa && pb) return -1;
+      if (pa && !pb) return 1;
+      if (pa && pb) return pa.bestPct - pb.bestPct;
+      return 0;
+    });
+
+    const listHTML = sorted.map(c => {
+      const prog = this._getConvProgress(c.id);
+      let badge = '';
+      let sub = c.subtitle;
+      if (prog) {
+        const color = prog.bestPct >= 70 ? 'var(--green)' : prog.bestPct >= 40 ? 'var(--orange)' : 'var(--red)';
+        badge = `<span style="font-size:13px;font-weight:700;color:${color}">${prog.bestPct}%</span>`;
+        sub = `${prog.attempts}x geübt — Beste: ${prog.bestPct}%`;
+      } else {
+        badge = `<span class="conv-diff">Neu</span>`;
+      }
+      return `
+        <button class="conv-item card" onclick="Conversation.start('${c.id}')">
+          <span class="conv-icon">${c.icon}</span>
+          <div class="conv-info">
+            <div class="conv-title">${c.title}</div>
+            <div class="conv-sub">${sub}</div>
+          </div>
+          ${badge}
+        </button>
+      `;
+    }).join('');
+
+    const completedCount = convs.filter(c => this._getConvProgress(c.id)).length;
 
     el.innerHTML = `
       <div class="conv-header">
@@ -1486,7 +1527,7 @@ const Conversation = {
           <button class="mode-btn active">Gespräche</button>
         </div>
         <h2>Gespräche üben</h2>
-        <p style="color:var(--text2);font-size:14px;margin-top:4px">Lerne durch echte Dialoge</p>
+        <p style="color:var(--text2);font-size:14px;margin-top:4px">${completedCount}/${convs.length} abgeschlossen — Lerne durch echte Dialoge</p>
       </div>
       <div class="conv-list">${listHTML}</div>
     `;
@@ -1644,13 +1685,19 @@ const Conversation = {
 
   _showEnd() {
     const pct = this.score.total > 0 ? Math.round(this.score.correct / this.score.total * 100) : 0;
+    // Save progress
+    this._saveConvProgress(this.current.id, this.score);
+    const prog = this._getConvProgress(this.current.id);
+
     const el = document.getElementById('learn-content');
     el.innerHTML = `
       <div class="conv-end">
-        <div class="feedback-emoji">🎉</div>
+        <div class="feedback-emoji">${pct >= 70 ? '🎉' : pct >= 40 ? '💪' : '🌱'}</div>
         <h2>Gespräch beendet!</h2>
         <div class="result-circle ${pct>=70?'green':pct>=40?'orange':'red'}">${pct}%</div>
         <p>${this.score.correct} von ${this.score.total} richtig</p>
+        ${prog && prog.bestPct > pct ? `<p style="font-size:13px;color:var(--text3)">Dein Rekord: ${prog.bestPct}%</p>` : ''}
+        ${prog && prog.bestPct <= pct && prog.attempts > 1 ? `<p style="font-size:13px;color:var(--green);font-weight:600">Neuer Rekord!</p>` : ''}
         <p class="motivate">${UI._motivate(pct)}</p>
         <button class="btn-primary" onclick="Conversation.start('${this.current.id}')">Nochmal üben</button>
         <button class="btn-secondary" onclick="Conversation.showList()" style="margin-top:8px">Zurück zur Liste</button>
