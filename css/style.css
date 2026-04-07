@@ -438,19 +438,44 @@ html, body {
   font-size: 15px; font-weight: 600; color: var(--accent);
   line-height: 1.5; margin-top: var(--sp-2);
 }
-.rule-examples {
-  width: 100%; text-align: left;
+.rule-table {
+  width: 100%; border-collapse: collapse;
+  margin-top: var(--sp-2); text-align: left;
+}
+.rule-table tr { border-bottom: 0.5px solid var(--separator); }
+.rule-table tr:last-child { border-bottom: none; }
+.rule-cell-pt {
+  font-size: 15px; font-weight: 700; color: var(--accent);
+  padding: 7px 10px 7px 0; white-space: nowrap;
+}
+.rule-cell-de {
+  font-size: 13px; color: var(--text2); padding: 7px 0;
+  font-weight: 500;
+}
+.rule-list {
+  width: 100%; margin-top: var(--sp-2);
   display: flex; flex-direction: column; gap: 4px;
-  margin-top: var(--sp-2);
 }
-.rule-example {
-  font-size: 13px; color: var(--text2); line-height: 1.4;
-  padding: 4px 0; border-bottom: 0.5px solid var(--separator);
+.rule-list-item {
+  font-size: 14px; color: var(--accent); font-weight: 600; padding: 3px 0;
 }
-.rule-example:last-child { border-bottom: none; }
+.rule-examples-table {
+  width: 100%; border-collapse: collapse;
+  margin-top: var(--sp-2); text-align: left;
+}
+.rule-examples-table tr { border-bottom: 0.5px solid var(--separator); }
+.rule-examples-table tr:last-child { border-bottom: none; }
+.ex-pt {
+  font-size: 14px; font-weight: 600; color: var(--text);
+  padding: 6px 8px 6px 0;
+}
+.ex-de {
+  font-size: 12px; color: var(--text3); padding: 6px 0;
+}
 .rule-note {
-  font-size: 12px; color: var(--text3); line-height: 1.4;
+  font-size: 12px; color: var(--text3); line-height: 1.5;
   margin-top: var(--sp-2); font-style: italic;
+  padding: var(--sp-2); background: var(--bg3); border-radius: var(--radius-xs);
 }
 .rule-rating {
   display: flex; flex-direction: column; gap: var(--sp-3);

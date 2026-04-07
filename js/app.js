@@ -902,13 +902,14 @@ const UI = {
         <div class="card-question-text" style="font-size:${card.exerciseType === 'build' ? '18' : '22'}px">${card.question}</div>
       `;
     } else if (isRule) {
-      // Grammar rules shown as study cards with examples — learner rates understanding
-      const exHTML = card.examples ? card.examples.slice(0,3).map(e => `<div class="rule-example">${e}</div>`).join('') : '';
+      // Grammar rules — smart formatting with tables for structured content
+      const ruleHTML = this._formatRule(card.answer);
+      const exHTML = card.examples ? this._formatExamples(card.examples) : '';
       questionHTML = `
         <div class="card-label">Grammatik</div>
         <div class="card-question-text" style="font-size:20px">${card.question}</div>
-        <div class="rule-content">${card.answer}</div>
-        ${exHTML ? `<div class="rule-examples">${exHTML}</div>` : ''}
+        ${ruleHTML}
+        ${exHTML}
         ${card.explanation ? `<div class="rule-note">${card.explanation}</div>` : ''}
       `;
     } else if (isContext) {
@@ -1396,6 +1397,49 @@ const UI = {
 
   _normalize(s) {
     return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  },
+
+  _formatRule(ruleText) {
+    if (!ruleText) return '';
+    // If rule contains | separators → render as table
+    if (ruleText.includes('|')) {
+      const parts = ruleText.split('|').map(p => p.trim()).filter(p => p);
+      // Check if parts have structure like "key (value)" or "key = value"
+      const rows = parts.map(p => {
+        const match = p.match(/^(.+?)\s*\((.+?)\)$/) || p.match(/^(.+?)\s*=\s*(.+)$/);
+        if (match) {
+          return `<tr><td class="rule-cell-pt">${match[1].trim()}</td><td class="rule-cell-de">${match[2].trim()}</td></tr>`;
+        }
+        return `<tr><td class="rule-cell-pt" colspan="2">${p}</td></tr>`;
+      });
+      return `<table class="rule-table">${rows.join('')}</table>`;
+    }
+    // If rule contains → or : → format as definition
+    if (ruleText.includes('→') || (ruleText.includes(':') && ruleText.length > 30)) {
+      const lines = ruleText.split(/[,;]/).map(p => p.trim()).filter(p => p);
+      if (lines.length > 1) {
+        return `<div class="rule-list">${lines.map(l => `<div class="rule-list-item">${l}</div>`).join('')}</div>`;
+      }
+    }
+    return `<div class="rule-content">${ruleText}</div>`;
+  },
+
+  _formatExamples(examples) {
+    if (!examples || examples.length === 0) return '';
+    const rows = examples.map(ex => {
+      // Try to split PT (DE) format
+      const match = ex.match(/^(.+?)\s*\((.+?)\)$/);
+      if (match) {
+        return `<tr><td class="ex-pt">${match[1].trim()}</td><td class="ex-de">${match[2].trim()}</td></tr>`;
+      }
+      // Try PT → DE or PT = DE
+      const arrow = ex.match(/^(.+?)\s*[→=]\s*(.+)$/);
+      if (arrow) {
+        return `<tr><td class="ex-pt">${arrow[1].trim()}</td><td class="ex-de">${arrow[2].trim()}</td></tr>`;
+      }
+      return `<tr><td class="ex-pt" colspan="2">${ex}</td></tr>`;
+    });
+    return `<table class="rule-examples-table">${rows.join('')}</table>`;
   },
 
   _diffAnswer(userText, correctText) {
