@@ -895,11 +895,18 @@ const UI = {
         fillblank: '✏️ Lückentext',
         build: '🧩 Satz bilden'
       };
+      // Generate letter hint for fillblank: first letter + length
+      let letterHint = '';
+      if (card.exerciseType === 'fillblank' && card.answer) {
+        const a = card.answer;
+        letterHint = `<div class="letter-hint">${a[0].toUpperCase()}${'·'.repeat(a.length - 1)} (${a.length} Buchstaben)</div>`;
+      }
       questionHTML = `
         <div class="card-label">${typeLabels[card.exerciseType] || 'Grammatik-Übung'}</div>
         <div class="exercise-badge">${typeBadges[card.exerciseType] || 'Übung'}</div>
         <div class="card-cat-badge">${card.hint || card.ruleTitle}</div>
         <div class="card-question-text" style="font-size:${card.exerciseType === 'build' ? '18' : '22'}px">${card.question}</div>
+        ${letterHint}
       `;
     } else if (isRule) {
       // Grammar rules — smart formatting with tables for structured content
@@ -913,10 +920,12 @@ const UI = {
         ${card.explanation ? `<div class="rule-note">${card.explanation}</div>` : ''}
       `;
     } else if (isContext) {
+      const ctxHint = card.answer ? `<div class="letter-hint">${card.answer[0].toUpperCase()}${'·'.repeat(Math.min(card.answer.split('/')[0].trim().length - 1, 12))} (${card.answer.split('/')[0].trim().length} Buchstaben)</div>` : '';
       questionHTML = `
         <div class="card-label">Ergänze das fehlende Wort</div>
         ${card.hint ? `<div class="card-cat-badge">${card.hint}</div>` : ''}
         <div class="card-question-text">${card.question}</div>
+        ${ctxHint}
       `;
     } else {
       const isDE = card.dir === 'de-pt';
