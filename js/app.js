@@ -895,11 +895,18 @@ const UI = {
         fillblank: '✏️ Lückentext',
         build: '🧩 Satz bilden'
       };
-      // Generate letter hint for fillblank: first letter + length
+      // Generate hint for fillblank: show German translation if available
       let letterHint = '';
       if (card.exerciseType === 'fillblank' && card.answer) {
-        const a = card.answer;
-        letterHint = `<div class="letter-hint">${a[0].toUpperCase()}${'·'.repeat(a.length - 1)} (${a.length} Buchstaben)</div>`;
+        // Look up the German translation from vocab cards
+        const allCards = CardEngine.buildAll();
+        const ptWord = card.answer.toLowerCase();
+        const match = allCards.find(c => c.type === 'vocab' && c.dir === 'pt-de' && c.question.toLowerCase().includes(ptWord));
+        if (match) {
+          letterHint = `<div class="letter-hint">🇩🇪 ${match.answer}</div>`;
+        } else {
+          letterHint = `<div class="letter-hint">${card.answer[0].toUpperCase()}${'·'.repeat(card.answer.length - 1)}</div>`;
+        }
       }
       questionHTML = `
         <div class="card-label">${typeLabels[card.exerciseType] || 'Grammatik-Übung'}</div>
@@ -920,7 +927,9 @@ const UI = {
         ${card.explanation ? `<div class="rule-note">${card.explanation}</div>` : ''}
       `;
     } else if (isContext) {
-      const ctxHint = card.answer ? `<div class="letter-hint">${card.answer[0].toUpperCase()}${'·'.repeat(Math.min(card.answer.split('/')[0].trim().length - 1, 12))} (${card.answer.split('/')[0].trim().length} Buchstaben)</div>` : '';
+      // Show German translation as hint for context cards
+      const ctxDE = card.raw?.de || '';
+      const ctxHint = ctxDE ? `<div class="letter-hint">🇩🇪 ${ctxDE}</div>` : card.answer ? `<div class="letter-hint">${card.answer[0].toUpperCase()}${'·'.repeat(card.answer.length - 1)}</div>` : '';
       questionHTML = `
         <div class="card-label">Ergänze das fehlende Wort</div>
         ${card.hint ? `<div class="card-cat-badge">${card.hint}</div>` : ''}
