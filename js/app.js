@@ -669,6 +669,12 @@ const Session = {
     if (correct) this.stats.correct++; else this.stats.wrong++;
     this.phaseStats[this.phase][correct ? 'correct' : 'wrong']++;
 
+    // Error analysis tracking
+    if (typeof AI !== 'undefined') {
+      if (correct) AI.errorAnalysis.trackSuccess(card);
+      else AI.errorAnalysis.trackError(card);
+    }
+
     // Rolling accuracy tracker (last 10)
     this._recentResults.push(correct ? 1 : 0);
     if (this._recentResults.length > 10) this._recentResults.shift();
@@ -788,6 +794,8 @@ const UI = {
           Heute lernen →
         </button>
       `}
+
+      ${typeof AI !== 'undefined' ? AI.errorAnalysis.renderReport() : ''}
 
       <div class="quick-tips card">
         <div class="tip-title">Tipp des Tages</div>
@@ -1336,6 +1344,17 @@ const UI = {
           </div>
         </div>
         <div class="settings-section">
+          <div class="settings-label">AI-Gespräche</div>
+          <div class="settings-info" style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:13px">Anthropic API Key für AI-Gespräche & Spracherkennung</span>
+            <input type="password" id="settings-api-key" class="card-input" style="font-size:14px"
+              placeholder="sk-ant-..." value="${typeof AI !== 'undefined' && AI.hasApiKey() ? '••••••••••••' : ''}"
+              onfocus="this.value = typeof AI !== 'undefined' ? AI.getApiKey() : ''"
+              onblur="if(this.value && !this.value.startsWith('••')) { AI.setApiKey(this.value); this.value='••••••••••••'; }">
+            <span style="font-size:11px;color:var(--text3)">Key bleibt lokal auf deinem Gerät.</span>
+          </div>
+        </div>
+        <div class="settings-section">
           <div class="settings-label">Daten</div>
           <button class="settings-btn" onclick="App.exportData()">Daten exportieren</button>
           <button class="settings-btn" onclick="App.importData()">Daten importieren</button>
@@ -1479,6 +1498,7 @@ const App = {
           <button class="mode-btn active">Lektionen</button>
           <button class="mode-btn" onclick="App.showVocabBrowser()">Vokabeln</button>
           <button class="mode-btn" onclick="Conversation.showList()">Gespräche</button>
+          <button class="mode-btn" onclick="AI.conversation.showScenarios()">AI Chat</button>
         </div>
 
         <div class="pre-icon">📚</div>
@@ -1601,6 +1621,28 @@ const App = {
         ${sectionsHTML}
       </div>
     `;
+  },
+
+  startWeaknessSession() {
+    if (typeof AI === 'undefined') return;
+    const cards = AI.errorAnalysis.getTargetedCards(15);
+    if (cards.length === 0) { alert('Keine Schwächen erkannt! Lerne weiter.'); return; }
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    document.getElementById('screen-learn').classList.add('active');
+    document.querySelector('[data-screen="learn"]')?.classList.add('active');
+
+    Session._moduleId = null;
+    Session.stats = { correct: 0, wrong: 0, seen: 0 };
+    Session.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
+    Session._recentResults = [];
+    Session.startTime = Date.now();
+    Session.phase = 'new';
+    Session.queue = cards;
+    Session.currentIdx = 0;
+    DB.updateStreak();
+    UI.showPhase('new', cards.length, 'Schwächen üben');
   },
 
   startCategorySession(category) {
@@ -1783,6 +1825,7 @@ const Conversation = {
           <button class="mode-btn" onclick="App.showLearnMenu()">Lektionen</button>
           <button class="mode-btn" onclick="App.showVocabBrowser()">Vokabeln</button>
           <button class="mode-btn active">Gespräche</button>
+          <button class="mode-btn" onclick="AI.conversation.showScenarios()">AI Chat</button>
         </div>
         <h2>Gespräche üben</h2>
         <p style="color:var(--text2);font-size:14px;margin-top:4px">${completedCount}/${convs.length} abgeschlossen — Lerne durch echte Dialoge</p>
