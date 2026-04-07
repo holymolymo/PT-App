@@ -290,6 +290,32 @@ const CardEngine = {
     return this._shuffle(due).slice(0, maxCount);
   },
 
+  // Get cards currently in learning/relearning phase (short intervals)
+  getLearningCards(maxCount = 10) {
+    const all = this.buildAll();
+    const learning = all.filter(c => {
+      const state = DB.getCardState(c.id);
+      if (!state) return false;
+      if (c.source === 'extra' && !this._isExtraUnlocked(c)) return false;
+      if (c.source === 'module' && !this._isModuleUnlocked(c.unit)) return false;
+      return SRS.isLearning(state) && SRS.isDue(state);
+    });
+    return this._shuffle(learning).slice(0, maxCount);
+  },
+
+  // Get "young" cards — seen but with low mastery, for reinforcement
+  getYoungCards(unitId, maxCount = 8) {
+    const unitCards = this.forUnit(unitId);
+    const young = unitCards.filter(c => {
+      const state = DB.getCardState(c.id);
+      if (!state) return false;
+      // Cards with low mastery (< 40%) and not currently due
+      const mastery = SRS.masteryScore(state);
+      return mastery < 40 && mastery > 0 && !SRS.isDue(state);
+    });
+    return this._shuffle(young).slice(0, maxCount);
+  },
+
   // Get new cards from the current unit with smart interleaving
   getNewCards(unitId, maxCount = 15) {
     const unitCards = this.forUnit(unitId);
@@ -446,12 +472,25 @@ const Session = {
     this._recentResults = [];
     this.startTime = Date.now();
     DB.updateStreak();
-    // Module sessions: skip review, go straight to new cards from this module
+    // Module sessions: review due module cards first, then new cards
     this.phase = 'new';
-    const newCards = CardEngine.getNewCards(moduleId, 15);
-    this.queue = newCards;
+    let newCards = CardEngine.getNewCards(moduleId, 15);
+    // If few unseen cards, add young cards for reinforcement
+    if (newCards.length < 5) {
+      const youngCards = CardEngine.getYoungCards(moduleId, 15 - newCards.length);
+      newCards = [...newCards, ...youngCards];
+    }
+    // Also prepend any due review cards from this module
+    const moduleDue = CardEngine.buildAll().filter(c => {
+      if (c.unit !== moduleId) return false;
+      const state = DB.getCardState(c.id);
+      return state && SRS.isDue(state);
+    });
+    const combined = [...CardEngine._shuffle(moduleDue).slice(0, 10), ...newCards];
+    const seen = new Set();
+    this.queue = combined.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; });
     this.currentIdx = 0;
-    if (newCards.length === 0) {
+    if (this.queue.length === 0) {
       this._startSummary();
       return;
     }
@@ -461,22 +500,33 @@ const Session = {
 
   _startReviewPhase() {
     this.phase = 'review';
+    // Get due review cards + learning cards (short intervals)
     const dueCards = CardEngine.getDueCards(20);
-    this.queue = dueCards;
+    const learningCards = CardEngine.getLearningCards(10);
+    const combined = [...learningCards, ...dueCards];
+    // Deduplicate
+    const seen = new Set();
+    this.queue = combined.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; });
     this.currentIdx = 0;
-    if (dueCards.length === 0) {
-      // No due cards — jump straight to new content
+    if (this.queue.length === 0) {
       this._startNewPhase();
       return;
     }
-    UI.showPhase('review', dueCards.length);
-    // _showCard() is triggered by the "Los geht's!" button in showPhase
+    UI.showPhase('review', this.queue.length);
   },
 
   _startNewPhase() {
     this.phase = 'new';
-    const unitId = CardEngine.getCurrentUnit();
-    const newCards = CardEngine.getNewCards(unitId, 12);
+    const unitId = this._moduleId || CardEngine.getCurrentUnit();
+    let newCards = CardEngine.getNewCards(unitId, 12);
+
+    // If no unseen cards left in this unit, try to pull "young" cards
+    // (cards seen but with low mastery) for reinforcement
+    if (newCards.length < 5) {
+      const youngCards = CardEngine.getYoungCards(unitId, 12 - newCards.length);
+      newCards = [...newCards, ...youngCards];
+    }
+
     this.queue = newCards;
     this.currentIdx = 0;
     if (newCards.length === 0) {
@@ -484,7 +534,6 @@ const Session = {
       return;
     }
     UI.showPhase('new', newCards.length);
-    // _showCard() is triggered by the "Los geht's!" button in showPhase
   },
 
   _startSummary() {
