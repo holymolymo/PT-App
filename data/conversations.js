@@ -401,5 +401,229 @@ window.CONVERSATIONS = [
         keywords:['gost','interess','apart','bonit'],hint:'Gosto muito... / Estou interessado/a...',
         answer:'Gosto muito do apartamento. Estou interessado!',next:'end'},
     ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 13. Am Flughafen
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    id: 'conv13',
+    title: 'No Aeroporto',
+    subtitle: 'Am Flughafen einchecken',
+    icon: '✈️',
+    color: '#0284c7',
+    difficulty: 'A1',
+    nodes: [
+      {id:'c13n1',speaker:'npc',type:'say',pt:'Boa tarde! O seu passaporte e o bilhete, por favor.',de:'Guten Tag! Ihren Reisepass und das Ticket, bitte.',next:'c13n2'},
+      {id:'c13n2',speaker:'learner',type:'write',prompt:'Gib den Reisepass und sage "Hier bitte"',
+        keywords:['aqui','passaporte','favor'],hint:'Aqui tem...',
+        answer:'Aqui tem o meu passaporte.',next:'c13n3'},
+      {id:'c13n3',speaker:'npc',type:'say',pt:'Obrigada. Tem bagagem para despachar?',de:'Danke. Haben Sie Gepäck zum Aufgeben?',next:'c13n4'},
+      {id:'c13n4',speaker:'learner',type:'choose',prompt:'Du hast einen Koffer aufzugeben',
+        options:[
+          {pt:'Sim, tenho uma mala para despachar.',de:'Ja, ich habe einen Koffer zum Aufgeben.',correct:true,next:'c13n5'},
+          {pt:'Não, só tenho bagagem de mão.',de:'Nein, nur Handgepäck.',correct:false,feedback:'Du hast doch einen Koffer dabei! "Uma mala para despachar" = ein Koffer zum Aufgeben.',next:'c13n4'},
+        ],next:'c13n5'},
+      {id:'c13n5',speaker:'npc',type:'say',pt:'Muito bem. Prefere lugar à janela ou no corredor?',de:'Sehr gut. Bevorzugen Sie Fenster- oder Gangplatz?',next:'c13n6'},
+      {id:'c13n6',speaker:'learner',type:'choose',prompt:'Du möchtest am Fenster sitzen',
+        options:[
+          {pt:'À janela, por favor.',de:'Am Fenster, bitte.',correct:true,next:'c13n7'},
+          {pt:'No corredor, por favor.',de:'Am Gang, bitte.',correct:false,feedback:'Du wolltest doch am Fenster sitzen! "À janela" = am Fenster.',next:'c13n6'},
+        ],next:'c13n7'},
+      {id:'c13n7',speaker:'npc',type:'say',pt:'Aqui tem o seu cartão de embarque. A porta de embarque é a 23. O embarque começa às 15h30.',de:'Hier ist Ihre Bordkarte. Gate 23. Boarding beginnt um 15:30.',next:'c13n8'},
+      {id:'c13n8',speaker:'learner',type:'write',prompt:'Frage, wo das Gate ist',
+        keywords:['onde','porta','embarque','gate'],hint:'Onde fica a porta...?',
+        answer:'Onde fica a porta de embarque?',next:'c13n9'},
+      {id:'c13n9',speaker:'npc',type:'say',pt:'Siga em frente e depois à direita, depois do controlo de segurança.',de:'Geradeaus und dann rechts, nach der Sicherheitskontrolle.',next:'c13n10'},
+      {id:'c13n10',speaker:'learner',type:'write',prompt:'Bedanke dich und wünsche einen guten Tag',
+        keywords:['obrigad','dia','tarde'],hint:'Obrigado/a!',
+        answer:'Muito obrigado! Boa tarde!',next:'end'},
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 14. Beim Friseur
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    id: 'conv14',
+    title: 'No Cabeleireiro',
+    subtitle: 'Beim Friseur',
+    icon: '💇',
+    color: '#9333ea',
+    difficulty: 'A2',
+    nodes: [
+      {id:'c14n1',speaker:'npc',type:'say',pt:'Boa tarde! Tem marcação?',de:'Guten Tag! Haben Sie einen Termin?',next:'c14n2'},
+      {id:'c14n2',speaker:'learner',type:'choose',prompt:'Du hast keinen Termin, fragst ob es ohne geht',
+        options:[
+          {pt:'Não, não tenho. É possível sem marcação?',de:'Nein, habe ich nicht. Geht es ohne Termin?',correct:true,next:'c14n3'},
+          {pt:'Sim.',de:'Ja.',correct:false,feedback:'Du hast keinen Termin! Sage "Não, não tenho" und frage ob es ohne geht.',next:'c14n2'},
+        ],next:'c14n3'},
+      {id:'c14n3',speaker:'npc',type:'say',pt:'Sim, pode ser. Sente-se, por favor. O que é que deseja?',de:'Ja, kein Problem. Setzen Sie sich bitte. Was möchten Sie?',next:'c14n4'},
+      {id:'c14n4',speaker:'learner',type:'choose',prompt:'Du möchtest die Haare schneiden lassen — nur kürzer',
+        options:[
+          {pt:'Queria cortar o cabelo, por favor. Só um pouco mais curto.',de:'Ich möchte die Haare schneiden lassen. Nur etwas kürzer.',correct:true,next:'c14n5'},
+          {pt:'Quero pintar o cabelo.',de:'Ich möchte die Haare färben.',correct:false,feedback:'Du wolltest doch schneiden! "Cortar o cabelo" = Haare schneiden.',next:'c14n4'},
+        ],next:'c14n5'},
+      {id:'c14n5',speaker:'npc',type:'say',pt:'Com certeza. Quanto é que quer tirar? Dois centímetros?',de:'Natürlich. Wie viel soll ab? Zwei Zentimeter?',next:'c14n6'},
+      {id:'c14n6',speaker:'learner',type:'write',prompt:'Sage ja, zwei Zentimeter ist gut',
+        keywords:['sim','dois','centímetro','bem','bom'],hint:'Sim, dois centímetros...',
+        answer:'Sim, dois centímetros está bem.',next:'c14n7'},
+      {id:'c14n7',speaker:'npc',type:'say',pt:'Pronto, está feito! Gosta?',de:'So, fertig! Gefällt es Ihnen?',next:'c14n8'},
+      {id:'c14n8',speaker:'learner',type:'write',prompt:'Sage, dass es dir sehr gut gefällt und frage nach dem Preis',
+        keywords:['gost','bonit','bem','quanto','cust','pagar'],hint:'Gosto muito! Quanto...?',
+        answer:'Gosto muito! Quanto é que fica?',next:'c14n9'},
+      {id:'c14n9',speaker:'npc',type:'say',pt:'São quinze euros.',de:'Das macht fünfzehn Euro.',next:'c14n10'},
+      {id:'c14n10',speaker:'learner',type:'write',prompt:'Zahle und verabschiede dich',
+        keywords:['aqui','obrigad','dia','tarde'],hint:'Aqui tem. Obrigado/a!',
+        answer:'Aqui tem. Muito obrigado!',next:'end'},
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 15. Im Bus / Zug — Fahrkarte kaufen
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    id: 'conv15',
+    title: 'No Autocarro / Comboio',
+    subtitle: 'Fahrkarte kaufen & fahren',
+    icon: '🚌',
+    color: '#0891b2',
+    difficulty: 'A1',
+    nodes: [
+      {id:'c15n1',speaker:'learner',type:'choose',prompt:'Du bist an der Haltestelle. Frage jemanden, ob das der richtige Bus nach Sintra ist',
+        options:[
+          {pt:'Desculpe, este autocarro vai para Sintra?',de:'Entschuldigung, fährt dieser Bus nach Sintra?',correct:true,next:'c15n2'},
+          {pt:'Sintra?',de:'Sintra?',correct:false,feedback:'Etwas ausführlicher! "Este autocarro vai para Sintra?" = Fährt dieser Bus nach Sintra?',next:'c15n1'},
+        ],next:'c15n2'},
+      {id:'c15n2',speaker:'npc',type:'say',pt:'Não, este vai para Cascais. Para Sintra tem de apanhar o comboio na estação do Rossio.',de:'Nein, dieser fährt nach Cascais. Nach Sintra müssen Sie den Zug am Bahnhof Rossio nehmen.',next:'c15n3'},
+      {id:'c15n3',speaker:'learner',type:'write',prompt:'Frage, wo der Bahnhof Rossio ist',
+        keywords:['onde','fica','Rossio','estação'],hint:'Onde fica...?',
+        answer:'Onde fica a estação do Rossio?',next:'c15n4'},
+      {id:'c15n4',speaker:'npc',type:'say',pt:'Fica ali, a cinco minutos a pé. Siga em frente e vire à esquerda.',de:'Der ist dort drüben, fünf Minuten zu Fuß. Geradeaus und dann links.',next:'c15n5'},
+      // At the train station
+      {id:'c15n5',speaker:'npc',type:'say',pt:'(Na bilheteira) Bom dia! Para onde?',de:'(Am Schalter) Guten Tag! Wohin?',next:'c15n6'},
+      {id:'c15n6',speaker:'learner',type:'choose',prompt:'Kaufe ein Hin-und-Rück-Ticket nach Sintra',
+        options:[
+          {pt:'Um bilhete de ida e volta para Sintra, por favor.',de:'Ein Hin-und-Rück-Ticket nach Sintra, bitte.',correct:true,next:'c15n7'},
+          {pt:'Um bilhete para Sintra.',de:'Ein Ticket nach Sintra.',correct:false,feedback:'Du willst hin UND zurück! "Ida e volta" = Hin und Zurück.',next:'c15n6'},
+        ],next:'c15n7'},
+      {id:'c15n7',speaker:'npc',type:'say',pt:'São quatro euros e cinquenta. O próximo comboio parte às dez e quinze, linha 1.',de:'Das macht 4,50 Euro. Der nächste Zug fährt um 10:15, Gleis 1.',next:'c15n8'},
+      {id:'c15n8',speaker:'learner',type:'write',prompt:'Frage, wie lange die Fahrt dauert',
+        keywords:['quanto','tempo','demora','dura','viagem'],hint:'Quanto tempo demora...?',
+        answer:'Quanto tempo demora a viagem?',next:'c15n9'},
+      {id:'c15n9',speaker:'npc',type:'say',pt:'Cerca de quarenta minutos. Boa viagem!',de:'Ungefähr vierzig Minuten. Gute Reise!',next:'c15n10'},
+      {id:'c15n10',speaker:'learner',type:'write',prompt:'Bedanke dich',
+        keywords:['obrigad','dia'],hint:'Obrigado/a!',
+        answer:'Obrigado! Bom dia!',next:'end'},
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 16. Beim Vermieter — Problem melden
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    id: 'conv16',
+    title: 'Falar com o Senhorio',
+    subtitle: 'Dem Vermieter ein Problem melden',
+    icon: '🔧',
+    color: '#dc2626',
+    difficulty: 'A2',
+    nodes: [
+      {id:'c16n1',speaker:'learner',type:'write',prompt:'Rufe deinen Vermieter an und begrüße ihn',
+        keywords:['dia','tarde','noite','senhor','senhora','olá'],hint:'Bom dia, senhor...',
+        answer:'Bom dia, senhor Silva!',next:'c16n2'},
+      {id:'c16n2',speaker:'npc',type:'say',pt:'Bom dia! Então, está tudo bem com o apartamento?',de:'Guten Tag! Na, ist alles in Ordnung mit der Wohnung?',next:'c16n3'},
+      {id:'c16n3',speaker:'learner',type:'choose',prompt:'Erkläre, dass die Waschmaschine kaputt ist',
+        options:[
+          {pt:'Na verdade, tenho um problema. A máquina de lavar está avariada.',de:'Eigentlich habe ich ein Problem. Die Waschmaschine ist kaputt.',correct:true,next:'c16n4'},
+          {pt:'Sim, está tudo bem.',de:'Ja, alles in Ordnung.',correct:false,feedback:'Du hast doch ein Problem! Sage "Tenho um problema" und erkläre was kaputt ist.',next:'c16n3'},
+        ],next:'c16n4'},
+      {id:'c16n4',speaker:'npc',type:'say',pt:'Oh, lamento muito! O que é que se passa exatamente?',de:'Oh, das tut mir sehr leid! Was genau ist passiert?',next:'c16n5'},
+      {id:'c16n5',speaker:'learner',type:'write',prompt:'Erkläre, dass die Maschine nicht mehr funktioniert — sie macht ein komisches Geräusch',
+        keywords:['funciona','barulho','trabalh','liga'],hint:'A máquina não...',
+        answer:'A máquina não funciona. Faz um barulho estranho.',next:'c16n6'},
+      {id:'c16n6',speaker:'npc',type:'say',pt:'Percebo. Vou enviar um técnico amanhã de manhã. Está em casa entre as nove e as doze?',de:'Ich verstehe. Ich schicke morgen früh einen Techniker. Sind Sie zwischen neun und zwölf zu Hause?',next:'c16n7'},
+      {id:'c16n7',speaker:'learner',type:'choose',prompt:'Sage ja, morgen Vormittag passt dir',
+        options:[
+          {pt:'Sim, estou em casa amanhã de manhã. Obrigado!',de:'Ja, ich bin morgen Vormittag zu Hause. Danke!',correct:true,next:'c16n8'},
+          {pt:'Não, amanhã não posso.',de:'Nein, morgen geht nicht.',correct:false,feedback:'Morgen Vormittag passt dir doch! "Estou em casa amanhã de manhã."',next:'c16n7'},
+        ],next:'c16n8'},
+      {id:'c16n8',speaker:'npc',type:'say',pt:'Ótimo! Se precisar de mais alguma coisa, é só ligar.',de:'Super! Wenn Sie sonst noch etwas brauchen, rufen Sie einfach an.',next:'c16n9'},
+      {id:'c16n9',speaker:'learner',type:'write',prompt:'Bedanke dich herzlich und verabschiede dich',
+        keywords:['obrigad','agradeç','dia','tarde'],hint:'Muito obrigado/a!',
+        answer:'Muito obrigado pela ajuda! Bom dia!',next:'end'},
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 17. An der Sprachschule — Sich anmelden
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    id: 'conv17',
+    title: 'Na Escola de Línguas',
+    subtitle: 'Sich an der Sprachschule anmelden',
+    icon: '🏫',
+    color: '#059669',
+    difficulty: 'A2',
+    nodes: [
+      {id:'c17n1',speaker:'npc',type:'say',pt:'Boa tarde! Bem-vindo à escola de línguas. Em que posso ajudar?',de:'Guten Tag! Willkommen an der Sprachschule. Wie kann ich helfen?',next:'c17n2'},
+      {id:'c17n2',speaker:'learner',type:'choose',prompt:'Sage, dass du Portugiesisch lernen möchtest',
+        options:[
+          {pt:'Boa tarde! Gostaria de me inscrever num curso de português.',de:'Guten Tag! Ich möchte mich für einen Portugiesischkurs anmelden.',correct:true,next:'c17n3'},
+          {pt:'Quero falar português.',de:'Ich will Portugiesisch sprechen.',correct:false,feedback:'Höflicher! Benutze "Gostaria de me inscrever num curso de..." = Ich möchte mich für einen Kurs einschreiben.',next:'c17n2'},
+        ],next:'c17n3'},
+      {id:'c17n3',speaker:'npc',type:'say',pt:'Ótimo! Já fala algum português ou é principiante?',de:'Super! Sprechen Sie schon etwas Portugiesisch oder sind Sie Anfänger?',next:'c17n4'},
+      {id:'c17n4',speaker:'learner',type:'write',prompt:'Sage, dass du ein bisschen sprichst aber noch Anfänger bist',
+        keywords:['pouco','inici','princip','começ','basic'],hint:'Falo um pouco, mas...',
+        answer:'Falo um pouco, mas ainda sou principiante.',next:'c17n5'},
+      {id:'c17n5',speaker:'npc',type:'say',pt:'Muito bem! Temos cursos de nível A1 e A2. O curso intensivo é de segunda a sexta, das nove às treze. O normal é duas vezes por semana.',de:'Sehr gut! Wir haben A1 und A2 Kurse. Der Intensivkurs ist Montag bis Freitag, 9-13 Uhr. Der normale Kurs ist zweimal pro Woche.',next:'c17n6'},
+      {id:'c17n6',speaker:'learner',type:'choose',prompt:'Frage nach dem Preis des normalen Kurses',
+        options:[
+          {pt:'Quanto custa o curso normal?',de:'Was kostet der normale Kurs?',correct:true,next:'c17n7'},
+          {pt:'Quero o intensivo.',de:'Ich möchte den Intensivkurs.',correct:false,feedback:'Frage erst nach dem Preis! "Quanto custa o curso normal?"',next:'c17n6'},
+        ],next:'c17n7'},
+      {id:'c17n7',speaker:'npc',type:'say',pt:'O curso normal custa duzentos euros por mês. Inclui material e acesso à plataforma online.',de:'Der normale Kurs kostet 200 Euro pro Monat. Material und Online-Zugang inklusive.',next:'c17n8'},
+      {id:'c17n8',speaker:'learner',type:'write',prompt:'Sage, dass du dich für den normalen Kurs anmelden möchtest und frage wann er anfängt',
+        keywords:['inscrev','normal','começa','quando','quero'],hint:'Queria inscrever-me... Quando começa?',
+        answer:'Queria inscrever-me no curso normal. Quando é que começa?',next:'c17n9'},
+      {id:'c17n9',speaker:'npc',type:'say',pt:'O próximo curso começa na segunda-feira. Preciso do seu nome completo e de um documento de identificação.',de:'Der nächste Kurs beginnt am Montag. Ich brauche Ihren vollständigen Namen und einen Ausweis.',next:'c17n10'},
+      {id:'c17n10',speaker:'learner',type:'write',prompt:'Gib deinen Namen und sage, dass du deinen Reisepass dabei hast',
+        keywords:['nome','chamo','passaporte','aqui'],hint:'O meu nome é... Tenho o passaporte...',
+        answer:'O meu nome é Schmidt. Tenho o passaporte aqui.',next:'end'},
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 18. Im Fitnessstudio
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    id: 'conv18',
+    title: 'No Ginásio',
+    subtitle: 'Im Fitnessstudio anmelden',
+    icon: '💪',
+    color: '#d97706',
+    difficulty: 'A2',
+    nodes: [
+      {id:'c18n1',speaker:'npc',type:'say',pt:'Boa tarde! Bem-vindo ao ginásio FitLisboa. Posso ajudar?',de:'Guten Tag! Willkommen im Fitnessstudio FitLisboa. Kann ich helfen?',next:'c18n2'},
+      {id:'c18n2',speaker:'learner',type:'choose',prompt:'Sage, dass du dich informieren möchtest',
+        options:[
+          {pt:'Boa tarde! Gostaria de saber os preços e os horários.',de:'Guten Tag! Ich möchte mich über Preise und Öffnungszeiten informieren.',correct:true,next:'c18n3'},
+          {pt:'Quero ginásio.',de:'Ich will Fitnessstudio.',correct:false,feedback:'Höflicher! "Gostaria de saber os preços e os horários" = Ich möchte die Preise und Zeiten erfahren.',next:'c18n2'},
+        ],next:'c18n3'},
+      {id:'c18n3',speaker:'npc',type:'say',pt:'Claro! Estamos abertos das sete da manhã às dez da noite. A mensalidade é quarenta euros, sem fidelização.',de:'Natürlich! Wir sind von 7 bis 22 Uhr geöffnet. Der Monatsbeitrag ist 40 Euro, ohne Vertragsbindung.',next:'c18n4'},
+      {id:'c18n4',speaker:'learner',type:'write',prompt:'Frage, ob eine Probestunde möglich ist',
+        keywords:['experiment','prova','aula','gratuit','test'],hint:'É possível fazer uma aula...?',
+        answer:'É possível fazer uma aula experimental?',next:'c18n5'},
+      {id:'c18n5',speaker:'npc',type:'say',pt:'Sim, a primeira aula é grátis! Quer experimentar hoje?',de:'Ja, die erste Stunde ist kostenlos! Möchten Sie heute ausprobieren?',next:'c18n6'},
+      {id:'c18n6',speaker:'learner',type:'choose',prompt:'Sage ja und frage was du mitbringen musst',
+        options:[
+          {pt:'Sim, gostava! O que é que preciso de trazer?',de:'Ja, gerne! Was muss ich mitbringen?',correct:true,next:'c18n7'},
+          {pt:'Não, obrigado.',de:'Nein, danke.',correct:false,feedback:'Komm schon, probier es aus! "Sim, gostava!" = Ja, ich würde gerne!',next:'c18n6'},
+        ],next:'c18n7'},
+      {id:'c18n7',speaker:'npc',type:'say',pt:'Só precisa de trazer roupa de desporto, sapatilhas e uma toalha. Nós temos cacifos e chuveiros.',de:'Sie brauchen nur Sportkleidung, Turnschuhe und ein Handtuch. Wir haben Schließfächer und Duschen.',next:'c18n8'},
+      {id:'c18n8',speaker:'learner',type:'write',prompt:'Bedanke dich und sage, dass du morgen wiederkommst',
+        keywords:['obrigad','amanhã','volto','venho'],hint:'Obrigado/a! Volto amanhã...',
+        answer:'Muito obrigado! Volto amanhã para experimentar.',next:'end'},
+    ]
   }
 ];
