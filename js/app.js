@@ -113,17 +113,15 @@ const CardEngine = {
             });
           });
         } else if (g.type === 'rule') {
+          // Study card (shown first encounter)
           cards.push({
             id: g.id,
-            unit: lesson.id,
-            source: 'book',
-            type: 'rule',
-            question: g.title,
-            answer: g.rule,
-            examples: g.examples || [],
-            explanation: g.note || null,
-            raw: g
+            unit: lesson.id, source: 'book', type: 'rule',
+            question: g.title, answer: g.rule,
+            examples: g.examples || [], explanation: g.note || null, raw: g
           });
+          // Generate exercise cards from examples
+          this._generateRuleExercises(g, lesson.id, 'book', cards);
         }
       });
     });
@@ -255,6 +253,7 @@ const CardEngine = {
             question: g.title, answer: g.rule,
             examples: g.examples || [], explanation: g.note || null, raw: g
           });
+          this._generateRuleExercises(g, mod.id, 'module', cards);
         }
       });
     });
@@ -270,6 +269,85 @@ const CardEngine = {
       imperfeito: 'Imperfekt',
       futuro_ir: 'Zukunft (ir+Inf.)'
     }[t] || t;
+  },
+
+  // Generate exercise cards from a grammar rule's examples
+  _generateRuleExercises(g, unitId, source, cards) {
+    const examples = g.examples || [];
+    if (examples.length === 0) return;
+
+    examples.forEach((ex, i) => {
+      // Parse example: "Sou do Porto (= de + o Porto)" or "Sou do Porto. (Ich komme aus Porto.)"
+      // Try to extract PT and DE parts
+      const parenMatch = ex.match(/^(.+?)\s*\((.+?)\)\s*$/);
+      let ptPart = '', dePart = '', rawPt = '';
+
+      if (parenMatch) {
+        rawPt = parenMatch[1].trim();
+        dePart = parenMatch[2].trim();
+        // Clean "= " prefix from DE part
+        dePart = dePart.replace(/^=\s*/, '');
+        ptPart = rawPt.replace(/[.!?]$/, '').trim();
+      } else {
+        // No parentheses — skip this example for exercises
+        return;
+      }
+
+      if (!ptPart || ptPart.length < 3) return;
+
+      // 1. TRANSLATE exercise (DE → PT)
+      if (dePart && dePart.length > 3 && !dePart.includes('→') && !dePart.includes('|')) {
+        cards.push({
+          id: g.id + '_tr' + i, unit: unitId, source,
+          type: 'rule-exercise', exerciseType: 'translate',
+          question: dePart, answer: ptPart,
+          hint: g.title, explanation: g.note || null,
+          ruleTitle: g.title, ruleId: g.id, raw: g
+        });
+      }
+
+      // 2. FILLBLANK exercise — blank out a key word (longest word > 2 chars)
+      const words = ptPart.split(/\s+/);
+      if (words.length >= 3) {
+        // Pick the word most likely to be the grammar target (not articles/pronouns)
+        const skipWords = new Set(['eu','tu','ele','ela','nós','eles','elas','você','vocês','o','a','os','as','um','uma','de','em','no','na','do','da','e','é','que','se','não']);
+        let blankIdx = -1;
+        let maxLen = 0;
+        words.forEach((w, wi) => {
+          const clean = w.replace(/[.,!?]/g, '').toLowerCase();
+          if (clean.length > maxLen && !skipWords.has(clean)) {
+            maxLen = clean.length;
+            blankIdx = wi;
+          }
+        });
+        if (blankIdx >= 0) {
+          const blankWord = words[blankIdx].replace(/[.,!?]/g, '');
+          const blanked = words.map((w, wi) => wi === blankIdx ? '___' : w).join(' ');
+          cards.push({
+            id: g.id + '_fb' + i, unit: unitId, source,
+            type: 'rule-exercise', exerciseType: 'fillblank',
+            question: blanked, answer: blankWord,
+            hint: g.title, explanation: `Vollständig: ${ptPart}`,
+            ruleTitle: g.title, ruleId: g.id, raw: g
+          });
+        }
+      }
+
+      // 3. BUILD exercise — scramble words (only for sentences with 3+ words)
+      if (words.length >= 3 && words.length <= 8) {
+        const scrambled = this._shuffle([...words]).join(' / ');
+        // Only if scrambled is different from original
+        if (scrambled.replace(/ \/ /g, ' ') !== ptPart) {
+          cards.push({
+            id: g.id + '_bd' + i, unit: unitId, source,
+            type: 'rule-exercise', exerciseType: 'build',
+            question: scrambled, answer: ptPart,
+            hint: g.title, explanation: g.note || null,
+            ruleTitle: g.title, ruleId: g.id, raw: g
+          });
+        }
+      }
+    });
   },
 
   // Get cards for a specific unit
@@ -784,6 +862,7 @@ const UI = {
     const el = document.getElementById('learn-content');
     const isConj = card.type === 'conjugation';
     const isRule = card.type === 'rule';
+    const isRuleExercise = card.type === 'rule-exercise';
     const pct = Math.round((progress.current - 1) / progress.total * 100);
 
     const isContext = card.type === 'context';
@@ -795,6 +874,24 @@ const UI = {
         <div class="card-tense-badge">${card.tenseLabel}</div>
         <div class="card-verb">${card.verb}</div>
         <div class="card-pronoun">${card.pronoun} →</div>
+      `;
+    } else if (isRuleExercise) {
+      // Active grammar exercises
+      const typeLabels = {
+        translate: 'Übersetze auf Portugiesisch',
+        fillblank: 'Ergänze das fehlende Wort',
+        build: 'Bilde den Satz'
+      };
+      const typeBadges = {
+        translate: '🔄 Übersetzen',
+        fillblank: '✏️ Lückentext',
+        build: '🧩 Satz bilden'
+      };
+      questionHTML = `
+        <div class="card-label">${typeLabels[card.exerciseType] || 'Grammatik-Übung'}</div>
+        <div class="exercise-badge">${typeBadges[card.exerciseType] || 'Übung'}</div>
+        <div class="card-cat-badge">${card.hint || card.ruleTitle}</div>
+        <div class="card-question-text" style="font-size:${card.exerciseType === 'build' ? '18' : '22'}px">${card.question}</div>
       `;
     } else if (isRule) {
       // Grammar rules shown as study cards with examples — learner rates understanding
@@ -843,6 +940,19 @@ const UI = {
           </div>
         </div>
       `;
+    } else if (isRuleExercise) {
+      const placeholder = card.exerciseType === 'translate' ? 'Übersetzung eingeben…'
+        : card.exerciseType === 'fillblank' ? 'Fehlendes Wort…'
+        : 'Satz eingeben…';
+      answerHTML = `
+        <div class="answer-input-wrap">
+          <input type="text" id="card-input" class="card-input"
+            placeholder="${placeholder}"
+            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+            onkeydown="if(event.key==='Enter') UI.checkInput()">
+          <button class="btn-check" onclick="UI.checkInput()">Prüfen</button>
+        </div>
+      `;
     } else if (isConj || isContext) {
       answerHTML = `
         <div class="answer-input-wrap">
@@ -881,7 +991,7 @@ const UI = {
     `;
 
     // Auto-focus input if text mode
-    if (isConj || isRule) {
+    if (isConj || isRuleExercise || isContext) {
       setTimeout(() => document.getElementById('card-input')?.focus(), 100);
     }
   },

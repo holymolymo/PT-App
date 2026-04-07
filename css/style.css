@@ -423,6 +423,17 @@ html, body {
 }
 .card-pronoun { font-size: 18px; color: var(--text2); font-weight: 500; }
 /* Rule study cards */
+/* Exercise badges */
+.exercise-badge {
+  display: inline-block;
+  font-size: 12px; font-weight: 700;
+  padding: 4px 12px; border-radius: 16px;
+  background: var(--accent-glow);
+  color: var(--accent);
+  letter-spacing: .3px;
+  margin-bottom: var(--sp-1);
+}
+
 .rule-content {
   font-size: 15px; font-weight: 600; color: var(--accent);
   line-height: 1.5; margin-top: var(--sp-2);
