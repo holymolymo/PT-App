@@ -1366,7 +1366,8 @@ const App = {
     el.innerHTML = `
       <div class="pre-session">
         <div class="mode-toggle">
-          <button class="mode-btn active">Karten</button>
+          <button class="mode-btn active">Lektionen</button>
+          <button class="mode-btn" onclick="App.showVocabBrowser()">Vokabeln</button>
           <button class="mode-btn" onclick="Conversation.showList()">Gespräche</button>
         </div>
 
@@ -1387,6 +1388,152 @@ const App = {
         </div>
       </div>
     `;
+  },
+
+  showVocabBrowser() {
+    const el = document.getElementById('learn-content');
+    const cards = CardEngine.buildAll();
+
+    // Group by category
+    const catMap = {};
+    cards.filter(c => c.hint && (c.type === 'vocab' || c.type === 'phrase')).forEach(c => {
+      if (!catMap[c.hint]) catMap[c.hint] = { cards: [], seen: 0, mastered: 0 };
+      catMap[c.hint].cards.push(c);
+      const state = DB.getCardState(c.id);
+      if (state) {
+        catMap[c.hint].seen++;
+        if (SRS.masteryScore(state) >= 70) catMap[c.hint].mastered++;
+      }
+    });
+
+    // Group categories into thematic sections
+    const sections = {
+      'Grundlagen': ['essencial','básico','expressões','emergência'],
+      'Menschen': ['profissões','nationalidades','países','família','descrição física','carácter','cabelo','olhos','tratamento','social'],
+      'Essen & Trinken': ['comida','alimentação','bebidas','restaurante','refeições'],
+      'Einkaufen': ['compras','roupa','comércio'],
+      'Unterwegs': ['transportes','direções','localização','lugares','hotel'],
+      'Alltag': ['actividades','rotina','tempo','lazer','cultura','sentimentos','desporto'],
+      'Gesundheit': ['corpo','saúde','farmácia'],
+      'Kommunikation': ['comunicação','tecnologia','cartas','telefone','burocracia','habitação'],
+      'Sprache': ['números','cores','objectos','advérbios lugar','advérbios tempo','preposições','pronomes','artigos','nomes','adjectivos','questões'],
+    };
+
+    let sectionsHTML = '';
+    const usedCats = new Set();
+
+    Object.entries(sections).forEach(([sectionTitle, catKeys]) => {
+      const catsInSection = catKeys.filter(k => catMap[k]);
+      if (catsInSection.length === 0) return;
+
+      const catsHTML = catsInSection.map(cat => {
+        usedCats.add(cat);
+        const data = catMap[cat];
+        const total = data.cards.length;
+        const pct = total > 0 ? Math.round(data.seen / total * 100) : 0;
+        const masteredPct = total > 0 ? Math.round(data.mastered / total * 100) : 0;
+        const color = masteredPct >= 70 ? 'var(--green)' : masteredPct >= 30 ? 'var(--orange)' : 'var(--text3)';
+        return `
+          <button class="vocab-cat-btn card" onclick="App.startCategorySession('${UI._esc(cat)}')">
+            <div class="vocab-cat-info">
+              <div class="vocab-cat-name">${cat}</div>
+              <div class="vocab-cat-count">${data.seen}/${total} Wörter</div>
+            </div>
+            <div class="vocab-cat-bar-wrap">
+              <div class="vocab-cat-bar" style="width:${pct}%;background:${color}"></div>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      sectionsHTML += `
+        <div class="vocab-section">
+          <div class="chart-title">${sectionTitle}</div>
+          <div class="vocab-cats">${catsHTML}</div>
+        </div>
+      `;
+    });
+
+    // Add any uncategorized categories
+    const uncategorized = Object.keys(catMap).filter(k => !usedCats.has(k));
+    if (uncategorized.length > 0) {
+      const uncatHTML = uncategorized.map(cat => {
+        const data = catMap[cat];
+        const total = data.cards.length;
+        const pct = total > 0 ? Math.round(data.seen / total * 100) : 0;
+        return `
+          <button class="vocab-cat-btn card" onclick="App.startCategorySession('${UI._esc(cat)}')">
+            <div class="vocab-cat-info">
+              <div class="vocab-cat-name">${cat}</div>
+              <div class="vocab-cat-count">${data.seen}/${total}</div>
+            </div>
+            <div class="vocab-cat-bar-wrap">
+              <div class="vocab-cat-bar" style="width:${pct}%"></div>
+            </div>
+          </button>
+        `;
+      }).join('');
+      sectionsHTML += `<div class="vocab-section"><div class="chart-title">Weitere</div><div class="vocab-cats">${uncatHTML}</div></div>`;
+    }
+
+    const totalVocab = Object.values(catMap).reduce((sum, d) => sum + d.cards.length, 0);
+    const totalSeen = Object.values(catMap).reduce((sum, d) => sum + d.seen, 0);
+
+    el.innerHTML = `
+      <div class="pre-session">
+        <div class="mode-toggle">
+          <button class="mode-btn" onclick="App.showLearnMenu()">Lektionen</button>
+          <button class="mode-btn active">Vokabeln</button>
+          <button class="mode-btn" onclick="Conversation.showList()">Gespräche</button>
+        </div>
+        <h2>Vokabeln entdecken</h2>
+        <p style="color:var(--text2);font-size:14px">${totalSeen}/${totalVocab} Wörter gelernt — Wähle eine Kategorie</p>
+        ${sectionsHTML}
+      </div>
+    `;
+  },
+
+  startCategorySession(category) {
+    const cards = CardEngine.buildAll().filter(c => c.hint === category && (c.type === 'vocab' || c.type === 'phrase'));
+    if (cards.length === 0) return;
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    document.getElementById('screen-learn').classList.add('active');
+    document.querySelector('[data-screen="learn"]')?.classList.add('active');
+
+    // Mix unseen and weak cards
+    const unseen = cards.filter(c => !DB.getCardState(c.id));
+    const weak = cards.filter(c => {
+      const state = DB.getCardState(c.id);
+      return state && SRS.masteryScore(state) < 50;
+    });
+    const due = cards.filter(c => {
+      const state = DB.getCardState(c.id);
+      return state && SRS.isDue(state);
+    });
+
+    let queue = [...CardEngine._shuffle(due), ...CardEngine._shuffle(unseen), ...CardEngine._shuffle(weak)];
+    // Deduplicate
+    const seenIds = new Set();
+    queue = queue.filter(c => { if (seenIds.has(c.id)) return false; seenIds.add(c.id); return true; });
+    queue = queue.slice(0, 15);
+
+    if (queue.length === 0) {
+      alert('Alle Wörter in dieser Kategorie gemeistert!');
+      return;
+    }
+
+    Session._moduleId = null;
+    Session.stats = { correct: 0, wrong: 0, seen: 0 };
+    Session.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
+    Session._recentResults = [];
+    Session.startTime = Date.now();
+    Session.phase = 'new';
+    Session.queue = queue;
+    Session.currentIdx = 0;
+    DB.updateStreak();
+    UI.showPhase('new', queue.length, category);
   },
 
   startSession() {
@@ -1523,7 +1670,8 @@ const Conversation = {
     el.innerHTML = `
       <div class="conv-header">
         <div class="mode-toggle">
-          <button class="mode-btn" onclick="App.showLearnMenu()">Karten</button>
+          <button class="mode-btn" onclick="App.showLearnMenu()">Lektionen</button>
+          <button class="mode-btn" onclick="App.showVocabBrowser()">Vokabeln</button>
           <button class="mode-btn active">Gespräche</button>
         </div>
         <h2>Gespräche üben</h2>

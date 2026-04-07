@@ -945,5 +945,31 @@ html, body {
 .conv-end h2 { font-size: 24px; font-weight: 800; }
 .conv-end .motivate { color: var(--text2); font-weight: 600; }
 
+/* ── Vocab Browser ───────────────────────────────────────────────────── */
+.vocab-section { margin-bottom: var(--sp-3); width: 100%; }
+.vocab-cats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-2);
+}
+.vocab-cat-btn {
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  padding: var(--sp-3); cursor: pointer;
+  border: none; text-align: left; width: 100%;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .15s;
+}
+.vocab-cat-btn:active { transform: scale(.97); }
+.vocab-cat-info { display: flex; justify-content: space-between; align-items: baseline; }
+.vocab-cat-name { font-size: 13px; font-weight: 700; color: var(--text); text-transform: capitalize; }
+.vocab-cat-count { font-size: 11px; color: var(--text3); font-weight: 500; }
+.vocab-cat-bar-wrap {
+  height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; width: 100%;
+}
+.vocab-cat-bar {
+  height: 100%; background: var(--accent); border-radius: 2px;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+}
+
 /* ── Utilities ───────────────────────────────────────────────────────── */
 b { font-weight: 700; }
