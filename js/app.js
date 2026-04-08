@@ -1590,15 +1590,13 @@ const App = {
 
     // Tab bar
     const tabs = [
-      {id:'smart', label:'Lernen', icon:'📚'},
-      {id:'vocab', label:'Vokabeln', icon:'🔤'},
-      {id:'grammar', label:'Grammatik', icon:'📐'},
-      {id:'conv', label:'Gespräche', icon:'💬'},
+      {id:'smart', label:'Lernen'},
+      {id:'vocab', label:'Vokabeln'},
+      {id:'grammar', label:'Grammatik'},
+      {id:'conv', label:'Gespräche'},
     ];
     const tabBar = `<div class="learn-tabs">${tabs.map(t =>
-      `<button class="learn-tab ${t.id === tab ? 'active' : ''}" onclick="App.showLearnHub('${t.id}')">
-        <span class="learn-tab-icon">${t.icon}</span><span>${t.label}</span>
-      </button>`
+      `<button class="learn-tab ${t.id === tab ? 'active' : ''}" onclick="App.showLearnHub('${t.id}')">${t.label}</button>`
     ).join('')}</div>`;
 
     let content = '';
