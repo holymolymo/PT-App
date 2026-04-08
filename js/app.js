@@ -873,17 +873,22 @@ const UI = {
         fillblank: '✏️ Lückentext',
         build: '🧩 Satz bilden'
       };
-      // Generate hint for fillblank: show German translation if available
+      // Generate hint for fillblank: show German translation or letter hint
       let letterHint = '';
       if (card.exerciseType === 'fillblank' && card.answer) {
-        // Look up the German translation from vocab cards
         const allCards = CardEngine.buildAll();
         const ptWord = card.answer.toLowerCase();
-        const match = allCards.find(c => c.type === 'vocab' && c.dir === 'pt-de' && c.question.toLowerCase().includes(ptWord));
+        // Try exact match, then partial match, then any card containing the word
+        const match = allCards.find(c => c.type === 'vocab' && c.dir === 'pt-de' && c.question.toLowerCase() === ptWord)
+          || allCards.find(c => c.type === 'vocab' && c.dir === 'pt-de' && c.question.toLowerCase().includes(ptWord))
+          || allCards.find(c => (c.type === 'phrase' || c.type === 'vocab') && c.dir === 'pt-de' && c.question.toLowerCase().includes(ptWord));
         if (match) {
           letterHint = `<div class="letter-hint">🇩🇪 ${match.answer}</div>`;
+        } else if (card.explanation) {
+          // Use explanation as fallback hint
+          letterHint = `<div class="letter-hint">💡 ${card.explanation.substring(0, 60)}</div>`;
         } else {
-          letterHint = `<div class="letter-hint">${card.answer[0].toUpperCase()}${'·'.repeat(card.answer.length - 1)}</div>`;
+          letterHint = `<div class="letter-hint">${card.answer[0].toUpperCase()}${'·'.repeat(card.answer.length - 1)} (${card.answer.length} Buchst.)</div>`;
         }
       }
       questionHTML = `
