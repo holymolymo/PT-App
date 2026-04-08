@@ -469,7 +469,7 @@ const CardEngine = {
       if (i === 0) return;
       const prevUnit = LESSONS[i - 1];
       const progress = DB.getUnitProgress(prevUnit.id, all);
-      if (progress >= 80) lesson.unlocked = true;
+      if (progress >= 60) lesson.unlocked = true; // 60% — don't hold learners back
     });
     // Modules: unlock based on prerequisite unit progress
     if (typeof MODULES !== 'undefined') {
@@ -538,6 +538,7 @@ const Session = {
     this.stats = { correct: 0, wrong: 0, seen: 0 };
     this.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
     this._recentResults = [];
+    this._sessionSeenIds = new Set(); // Ban within-session repeats
     this.startTime = Date.now();
     DB.updateStreak();
     this._startReviewPhase();
@@ -548,6 +549,7 @@ const Session = {
     this.stats = { correct: 0, wrong: 0, seen: 0 };
     this.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
     this._recentResults = [];
+    this._sessionSeenIds = new Set();
     this.startTime = Date.now();
     DB.updateStreak();
     // Module sessions: review due module cards first, then new cards
@@ -578,13 +580,10 @@ const Session = {
 
   _startReviewPhase() {
     this.phase = 'review';
-    // Get due review cards + learning cards (short intervals)
-    const dueCards = CardEngine.getDueCards(20);
-    const learningCards = CardEngine.getLearningCards(10);
-    const combined = [...learningCards, ...dueCards];
-    // Deduplicate
-    const seen = new Set();
-    this.queue = combined.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; });
+    // Get due review cards only (NOT learning cards — those stay for next session)
+    const dueCards = CardEngine.getDueCards(15);
+    // Filter out any cards already seen in this session
+    this.queue = dueCards.filter(c => !this._sessionSeenIds.has(c.id));
     this.currentIdx = 0;
     if (this.queue.length === 0) {
       this._startNewPhase();
@@ -596,14 +595,10 @@ const Session = {
   _startNewPhase() {
     this.phase = 'new';
     const unitId = this._moduleId || CardEngine.getCurrentUnit();
-    let newCards = CardEngine.getNewCards(unitId, 12);
-
-    // If no unseen cards left in this unit, try to pull "young" cards
-    // (cards seen but with low mastery) for reinforcement
-    if (newCards.length < 5) {
-      const youngCards = CardEngine.getYoungCards(unitId, 12 - newCards.length);
-      newCards = [...newCards, ...youngCards];
-    }
+    // Cap new cards at 8 per session (research: 5-10 optimal for language learning)
+    let newCards = CardEngine.getNewCards(unitId, 8);
+    // Filter out cards already seen this session
+    newCards = newCards.filter(c => !this._sessionSeenIds.has(c.id));
 
     this.queue = newCards;
     this.currentIdx = 0;
@@ -669,6 +664,9 @@ const Session = {
     if (correct) this.stats.correct++; else this.stats.wrong++;
     this.phaseStats[this.phase][correct ? 'correct' : 'wrong']++;
 
+    // Track this card as seen in this session (prevent within-session repeats)
+    this._sessionSeenIds.add(card.id);
+
     // Error analysis tracking
     if (typeof AI !== 'undefined') {
       if (correct) AI.errorAnalysis.trackSuccess(card);
@@ -679,28 +677,8 @@ const Session = {
     this._recentResults.push(correct ? 1 : 0);
     if (this._recentResults.length > 10) this._recentResults.shift();
 
-    // If wrong, re-add card to end of queue (once)
-    if (!correct && !card._retried) {
-      const retry = { ...card, _retried: true };
-      this.queue.push(retry);
-    }
-
-    // Adaptive: if accuracy drops below 65%, inject easier review cards
-    if (this.phase === 'new' && this._recentResults.length >= 5) {
-      const recentPct = this._recentResults.reduce((a,b) => a+b, 0) / this._recentResults.length;
-      if (recentPct < 0.65 && !card._easyInserted) {
-        // Insert an easy review card (already mastered) to boost confidence
-        const easyCards = CardEngine.buildAll().filter(c => {
-          const s = DB.getCardState(c.id);
-          return s && s.repetitions >= 2 && s.lastQuality >= 4 && c.type === 'vocab';
-        });
-        if (easyCards.length > 0) {
-          const easy = CardEngine._shuffle(easyCards)[0];
-          easy._easyInserted = true;
-          this.queue.splice(this.currentIdx + 1, 0, easy);
-        }
-      }
-    }
+    // Wrong cards are NOT re-queued within the session.
+    // SRS handles re-scheduling to a future date. This prevents the loop.
 
     this.currentIdx++;
     this._showCard();
@@ -1127,7 +1105,7 @@ const UI = {
     const unitProg = DB.getUnitProgress(unitId, all);
 
     // Update current unit if ≥80%
-    if (unitProg >= 80 && unitId < 14) {
+    if (unitProg >= 60 && unitId < 14) {
       const p = DB.getProfile();
       if (p.currentUnit === unitId) {
         p.currentUnit = unitId + 1;
@@ -1699,6 +1677,7 @@ const App = {
     Session.stats = { correct: 0, wrong: 0, seen: 0 };
     Session.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
     Session._recentResults = [];
+    Session._sessionSeenIds = new Set();
     Session.startTime = Date.now();
     Session.phase = 'new';
     Session.queue = cards;
@@ -1708,6 +1687,7 @@ const App = {
   },
 
   startCategorySession(category) {
+    // Vocab browser sessions use the same SRS system — progress counts everywhere
     const cards = CardEngine.buildAll().filter(c => c.hint === category && (c.type === 'vocab' || c.type === 'phrase'));
     if (cards.length === 0) return;
 
@@ -1742,6 +1722,7 @@ const App = {
     Session.stats = { correct: 0, wrong: 0, seen: 0 };
     Session.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
     Session._recentResults = [];
+    Session._sessionSeenIds = new Set();
     Session.startTime = Date.now();
     Session.phase = 'new';
     Session.queue = queue;

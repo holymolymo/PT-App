@@ -9,12 +9,12 @@ const SRS = {
   LEARNING_STEPS: [1, 10],
   // Relearning steps in minutes (lapsed cards cycle through these)
   RELEARNING_STEPS: [10],
-  // Graduating interval (days) when card finishes learning steps
-  GRADUATING_INTERVAL: 1,
+  // Graduating interval (days) — FSRS-inspired: 3 days gives better retention
+  GRADUATING_INTERVAL: 3,
   // Easy interval (days) when pressing "easy" on a new card
-  EASY_INTERVAL: 4,
+  EASY_INTERVAL: 8,
   // Minimum interval (days) after a lapse
-  MIN_LAPSE_INTERVAL: 1,
+  MIN_LAPSE_INTERVAL: 2,
   // Lapse interval multiplier (e.g. 0.5 = halve the interval on lapse)
   LAPSE_INTERVAL_MULT: 0.5,
   // Leech threshold (number of lapses before flagging)
@@ -215,18 +215,21 @@ const SRS = {
    * Considers: repetitions, interval, ease factor, and lapses
    */
   masteryScore(state) {
-    if (!state || !state.repetitions) return 0;
+    if (!state) return 0;
+    // Seen but no reps yet = 10% (just seeing a card is progress)
+    if (!state.repetitions) return 10;
 
-    // Weight: 40% repetitions, 40% interval, 20% stability (low lapses + high ease)
-    const repScore = Math.min(state.repetitions / 5, 1) * 40;
-    const intervalScore = Math.min(state.interval / 30, 1) * 40;
-
-    // Stability: penalize high lapse count, reward high ease
+    // Front-loaded formula: early progress feels fast, later progress slows
+    // 55% from repetitions (reaches max at 3 reps — fast!)
+    const repScore = Math.min(state.repetitions / 3, 1) * 55;
+    // 30% from interval (logarithmic — fast early, slow late)
+    const intervalScore = Math.min(Math.log2(state.interval + 1) / 5, 1) * 30;
+    // 15% from stability (ease factor + no lapses)
     const easePct = (state.easeFactor - this.MIN_EASE) / (this.MAX_EASE - this.MIN_EASE);
-    const lapsePenalty = Math.max(0, 1 - (state.lapses || 0) / 10);
-    const stabilityScore = ((easePct + lapsePenalty) / 2) * 20;
+    const lapsePenalty = Math.max(0, 1 - (state.lapses || 0) / 8);
+    const stabilityScore = ((easePct + lapsePenalty) / 2) * 15;
 
-    return Math.round(repScore + intervalScore + stabilityScore);
+    return Math.round(Math.min(100, repScore + intervalScore + stabilityScore));
   },
 
   /**
