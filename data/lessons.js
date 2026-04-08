@@ -1455,7 +1455,7 @@ window.LESSONS = [
       rule:'Standard: NACH Verb (Chamo-me) | VOR Verb bei: não, quem, que, já, também, ainda, nunca',
       examples:['Eu chamo-me Ana. (Standard: NACH dem Verb)','Não me chamo Ana. (Verneinung: VOR dem Verb)','Quem te disse? (Fragewort: VOR)','Já o vi. (Adverb já: VOR)','Também me disse. (Adverb também: VOR)'],
       note:'DIE schwierigste Regel im EU-PT! In Brasilien steht das Pronomen immer VOR dem Verb. In Portugal NACH — außer bei "Triggern" (não, quem, que, já, também, ainda, nunca, ninguém, alguém). Im Zweifel: NACH dem Verb.'},
-    {id:'u11g12', type:'rule', title:'Wichtige Redewendungen (Perfeito)',
+    {id:'u11g18', type:'rule', title:'Wichtige Redewendungen (Perfeito)',
       rule:'Ter razão = Recht haben | Ter saudades de = vermissen | Dar-se bem com = sich gut verstehen',
       examples:['Tens razão! (Du hast Recht!)','Tenho saudades de Portugal. (Ich vermisse Portugal.)','Damo-nos bem. (Wir verstehen uns gut.)','Não faz mal. (Macht nichts.)','Está bem. / Tá bem. (Okay. / Alles klar.)'],
       note:'"Saudade" ist DAS portugiesische Wort — eine tiefe, wehmütige Sehnsucht. Es gibt kein deutsches Äquivalent. "Tenho saudades tuas" = Ich vermisse dich.'},

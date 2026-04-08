@@ -164,7 +164,7 @@ window.EXTRA_VERBS = [
     note:'morar = wohnen.'
   },
   {
-    id:'ev21', inf:'chegar', de:'ankommen / ankommen', type:'regular_ar',
+    id:'ev21', inf:'chegar', de:'ankommen', type:'regular_ar',
     presente:     {eu:'chego',tu:'chegas','ele/ela/você':'chega',nós:'chegamos','eles/elas/vocês':'chegam'},
     perfeito:     {eu:'cheguei',tu:'chegaste','ele/ela/você':'chegou',nós:'chegámos','eles/elas/vocês':'chegaram'},
     imperfeito:   {eu:'chegava',tu:'chegavas','ele/ela/você':'chegava',nós:'chegávamos','eles/elas/vocês':'chegavam'},
@@ -526,7 +526,7 @@ window.EXTRA_VOCAB = [
   {id:'ex111',pt:'igual',de:'gleich',cat:'adjectivos'},
   {id:'ex112',pt:'novo / nova',de:'neu / jung',cat:'adjectivos'},
   {id:'ex113',pt:'velho / velha',de:'alt',cat:'adjectivos'},
-  {id:'ex114',pt:'certo / certa',de:'gewiss / sicher',cat:'adjectivos'},
+  {id:'ex114',pt:'bonito / bonita',de:'schön / hübsch',cat:'adjectivos'},
   {id:'ex115',pt:'possível',de:'möglich',cat:'adjectivos'},
   {id:'ex116',pt:'impossível',de:'unmöglich',cat:'adjectivos'},
   {id:'ex117',pt:'necessário / necessária',de:'notwendig',cat:'adjectivos'},
@@ -666,7 +666,7 @@ window.EXTRA_PHRASES = [
   {id:'ep36',pt:'Não entendi. Pode repetir?',de:'Ich habe nicht verstanden. Können Sie wiederholen?',ctx:'geral'},
   {id:'ep37',pt:'Como se diz ... em português?',de:'Wie sagt man ... auf Portugiesisch?',ctx:'geral'},
   {id:'ep38',pt:'Falo um pouco de português.',de:'Ich spreche ein bisschen Portugiesisch.',ctx:'geral'},
-  {id:'ep39',pt:'Sou alemão/alemã.',de:'Ich bin Deutschen.',ctx:'geral'},
+  {id:'ep39',pt:'Sou alemão/alemã.',de:'Ich bin Deutscher/Deutsche.',ctx:'geral'},
   {id:'ep40',pt:'Estou a aprender português.',de:'Ich lerne Portugiesisch.',ctx:'geral'},
   {id:'ep41',pt:'Que horas são?',de:'Wie viel Uhr ist es?',ctx:'geral'},
   {id:'ep42',pt:'A que horas abre/fecha?',de:'Um wie viel Uhr öffnet/schließt es?',ctx:'geral'},
