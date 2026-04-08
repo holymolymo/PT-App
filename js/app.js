@@ -849,9 +849,9 @@ const UI = {
 
   _greeting() {
     const h = new Date().getHours();
-    if (h < 12) return 'Bom dia! 👋';
-    if (h < 18) return 'Boa tarde! 👋';
-    return 'Boa noite! 👋';
+    if (h < 12) return 'Bom dia';
+    if (h < 18) return 'Boa tarde';
+    return 'Boa noite';
   },
 
   _dailyTip() {
@@ -1693,21 +1693,19 @@ const App = {
     }).join('');
 
     return `<div class="learn-hub-section">
-      <div class="learn-hub-card card" onclick="App.startSmartSession()" style="cursor:pointer">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="font-size:36px">🚀</div>
-          <div style="flex:1">
-            <div style="font-size:17px;font-weight:800">Nächste Lektion</div>
-            <div style="font-size:13px;color:var(--text2);margin-top:2px">
-              Lektion ${unitId}: ${lesson?.title || ''} · ${seenCount}/${unitCards.length} Karten
-            </div>
+      <button class="cta-card" onclick="App.startLesson(${unitId})">
+        <div class="cta-content">
+          <div class="cta-badge" style="background:${lesson?.color||'var(--accent)'}">${unitId}</div>
+          <div class="cta-info">
+            <div class="cta-title">Lektion ${unitId} fortsetzen</div>
+            <div class="cta-sub">${lesson?.title || ''}</div>
           </div>
-          <div style="color:var(--accent);font-size:20px;font-weight:700">→</div>
         </div>
-        <div class="progress-bar-wrap" style="margin-top:10px">
+        <div class="progress-bar-wrap" style="margin-top:12px">
           <div class="progress-bar" style="width:${unitProg}%;background:${lesson?.color||'var(--accent)'}"></div>
         </div>
-      </div>
+        <div class="cta-meta">${seenCount} von ${unitCards.length} Karten · ${unitProg}%</div>
+      </button>
 
       <div class="chart-title" style="margin-top:16px">Lernpfad</div>
       <div class="path-list">${pathHTML}</div>
@@ -1728,20 +1726,18 @@ const App = {
 
     return `<div class="learn-hub-section">
       ${due > 0 ? `
-        <div class="learn-hub-card card" onclick="App.startReviewSession()" style="cursor:pointer">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="font-size:36px">🔄</div>
-            <div style="flex:1">
-              <div style="font-size:17px;font-weight:800">Wiederholung</div>
-              <div style="font-size:13px;color:var(--text2)">${due} Karten fällig</div>
+        <button class="cta-card" onclick="App.startReviewSession()">
+          <div class="cta-content">
+            <div class="cta-badge" style="background:var(--orange)">${due}</div>
+            <div class="cta-info">
+              <div class="cta-title">Karten wiederholen</div>
+              <div class="cta-sub">${due} Karten sind heute fällig</div>
             </div>
-            <div style="color:var(--accent);font-size:20px;font-weight:700">→</div>
           </div>
-        </div>
-      ` : `<div class="card" style="text-align:center;padding:20px;color:var(--text2)">
-        <div style="font-size:32px;margin-bottom:8px">✅</div>
-        <div style="font-weight:600">Keine Karten fällig!</div>
-        <div style="font-size:13px;margin-top:4px">Komm morgen wieder oder lerne neue Inhalte.</div>
+        </button>
+      ` : `<div class="card" style="text-align:center;padding:24px;color:var(--text2)">
+        <div style="font-size:15px;font-weight:600;color:var(--text)">Alles wiederholt</div>
+        <div style="font-size:13px;margin-top:4px">Keine Karten fällig. Komm morgen wieder.</div>
       </div>`}
 
       ${weakHTML}
@@ -1811,14 +1807,15 @@ const App = {
 
         ${typeof AI !== 'undefined' && AI.errorAnalysis.getWeaknesses(3).length > 0 ? `
           <div class="chart-title" style="margin-top:16px">Schwächen gezielt üben</div>
-          <div class="card" onclick="App.startWeaknessSession()" style="cursor:pointer;display:flex;align-items:center;gap:12px">
-            <div style="font-size:24px">🎯</div>
-            <div style="flex:1">
-              <div style="font-weight:700;font-size:14px">Schwächen-Training</div>
-              <div style="font-size:12px;color:var(--text2)">Karten üben, die dir schwer fallen</div>
+          <button class="cta-card" onclick="App.startWeaknessSession()" style="padding:14px var(--sp-4)">
+            <div class="cta-content">
+              <div class="cta-badge" style="background:var(--red);width:32px;height:32px;font-size:13px">!</div>
+              <div class="cta-info">
+                <div class="cta-title" style="font-size:15px">Schwächen-Training</div>
+                <div class="cta-sub">Karten üben, die dir schwer fallen</div>
+              </div>
             </div>
-            <div style="color:var(--accent)">→</div>
-          </div>
+          </button>
         ` : ''}
       </div>
     `;

@@ -177,12 +177,9 @@ html, body {
 
 .home-header { padding: var(--sp-1) 0 var(--sp-2); }
 .greeting {
-  font-size: 28px; font-weight: 800;
-  letter-spacing: -.7px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-light));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 32px; font-weight: 800;
+  letter-spacing: -.8px;
+  color: var(--text);
 }
 .date-label { font-size: 14px; color: var(--text2); margin-top: 2px; }
 
@@ -191,13 +188,13 @@ html, body {
   align-items: center;
   gap: var(--sp-3);
 }
-.streak-icon { font-size: 36px; }
+.streak-icon { font-size: 28px; }
 .streak-info { flex: 1; }
 .streak-num {
-  font-size: 36px; font-weight: 800;
+  font-size: 28px; font-weight: 800;
   color: var(--orange);
   line-height: 1;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
 }
 .streak-label { font-size: 12px; color: var(--text2); margin-top: 1px; }
 .streak-stats { display: flex; gap: var(--sp-3); }
@@ -1057,36 +1054,68 @@ html, body {
 .learn-hub-section {
   padding-bottom: var(--sp-4);
 }
-.learn-hub-card { cursor: pointer; transition: transform .15s; }
-.learn-hub-card:active { transform: scale(.98); }
 
-/* Lesson path */
+/* CTA card — primary action */
+.cta-card {
+  width: 100%;
+  padding: var(--sp-5);
+  background: var(--bg2);
+  border: var(--card-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: transform .15s, background .15s;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.cta-card:active { transform: scale(.98); background: var(--bg3); }
+.cta-content { display: flex; align-items: center; gap: var(--sp-3); }
+.cta-badge {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  color: white; font-size: 16px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cta-info { flex: 1; }
+.cta-title { font-size: 17px; font-weight: 700; color: var(--text); }
+.cta-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+.cta-meta { font-size: 11px; color: var(--text3); margin-top: 6px; font-weight: 500; }
+
+/* Lesson path — Apple-style clean design */
 .path-list {
-  display: flex; flex-direction: column; gap: var(--sp-2);
+  display: flex; flex-direction: column; gap: 1px;
+  background: var(--separator);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 .path-node {
   display: flex; align-items: center; gap: var(--sp-3);
-  padding: var(--sp-3); border-radius: var(--radius-sm);
-  background: var(--bg2); border: var(--card-border);
-  cursor: pointer; transition: all .15s;
+  padding: 14px var(--sp-4);
+  background: var(--bg2);
+  cursor: pointer; transition: background .15s;
   -webkit-tap-highlight-color: transparent;
+  border: none;
 }
-.path-node:active { transform: scale(.98); }
-.path-node.path-locked { opacity: .35; cursor: default; }
+.path-node:active { background: var(--bg3); }
+.path-node.path-locked { cursor: default; }
+.path-node.path-locked .path-title { color: var(--text3); }
+.path-node.path-locked .path-badge { opacity: .4; }
 .path-node.path-current {
-  border: 1.5px solid var(--accent);
-  box-shadow: 0 0 12px var(--accent-glow);
+  background: var(--accent-glow);
 }
-.path-node.path-done { opacity: .7; }
 .path-badge {
-  width: 32px; height: 32px; border-radius: var(--radius-xs);
-  color: white; font-size: 13px; font-weight: 800;
+  width: 28px; height: 28px; border-radius: 8px;
+  color: white; font-size: 12px; font-weight: 800;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
 .path-info { flex: 1; min-width: 0; }
-.path-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.path-sub { font-size: 11px; color: var(--text3); }
+.path-title {
+  font-size: 15px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.path-sub { font-size: 12px; color: var(--text3); font-weight: 500; }
 
 /* Grammar items */
 .grammar-item {
