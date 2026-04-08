@@ -535,13 +535,76 @@ const Session = {
 
   start() {
     this._moduleId = null;
+    this._smartConvId = null;
     this.stats = { correct: 0, wrong: 0, seen: 0 };
     this.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
     this._recentResults = [];
-    this._sessionSeenIds = new Set(); // Ban within-session repeats
+    this._sessionSeenIds = new Set();
     this.startTime = Date.now();
     DB.updateStreak();
     this._startReviewPhase();
+  },
+
+  startSmart(dueCards, newCards, convId) {
+    this._moduleId = null;
+    this._smartConvId = convId;
+    this._smartNewCards = newCards;
+    this.stats = { correct: 0, wrong: 0, seen: 0 };
+    this.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
+    this._recentResults = [];
+    this._sessionSeenIds = new Set();
+    this.startTime = Date.now();
+    DB.updateStreak();
+
+    // Phase 1: Review
+    this.phase = 'review';
+    this.queue = dueCards;
+    this.currentIdx = 0;
+    if (dueCards.length === 0) {
+      this._smartStartNew();
+      return;
+    }
+    UI.showPhase('review', dueCards.length);
+  },
+
+  _smartStartNew() {
+    // Phase 2: New content
+    this.phase = 'new';
+    const newCards = (this._smartNewCards || []).filter(c => !this._sessionSeenIds.has(c.id));
+    this.queue = newCards;
+    this.currentIdx = 0;
+    if (newCards.length === 0) {
+      this._smartStartConv();
+      return;
+    }
+    UI.showPhase('new', newCards.length);
+  },
+
+  _smartStartConv() {
+    // Phase 3: Conversation (if available)
+    if (this._smartConvId) {
+      // Show transition screen before conversation
+      const el = document.getElementById('learn-content');
+      const conv = CONVERSATIONS.find(c => c.id === this._smartConvId);
+      el.innerHTML = `
+        <div class="phase-transition">
+          <div class="phase-icon">💬</div>
+          <h2>Jetzt anwenden!</h2>
+          <p>Übe das Gelernte in einem echten Gespräch</p>
+          <div class="card" style="display:flex;align-items:center;gap:12px;width:100%;margin:8px 0">
+            <span style="font-size:28px">${conv?.icon || '💬'}</span>
+            <div>
+              <div style="font-weight:700">${conv?.title || ''}</div>
+              <div style="font-size:13px;color:var(--text2)">${conv?.subtitle || ''}</div>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="Conversation.start('${this._smartConvId}'); Conversation._onEndCallback = function() { Session._startSummary(); };">Gespräch starten</button>
+          <button class="btn-secondary" onclick="Session._startSummary()" style="margin-top:8px">Überspringen</button>
+        </div>
+      `;
+    } else {
+      this._startSummary();
+    }
   },
 
   startModule(moduleId) {
@@ -642,9 +705,19 @@ const Session = {
   _showCard() {
     if (this.currentIdx >= this.queue.length) {
       if (this.phase === 'review') {
-        UI.showPhaseTransition('new');
+        if (this._smartConvId !== undefined) {
+          // Smart session: transition to new phase
+          UI.showPhaseTransition('new', true);
+        } else {
+          UI.showPhaseTransition('new');
+        }
       } else {
-        this._startSummary();
+        if (this._smartConvId !== undefined) {
+          // Smart session: go to conversation phase
+          this._smartStartConv();
+        } else {
+          this._startSummary();
+        }
       }
       return;
     }
@@ -760,18 +833,9 @@ const UI = {
 
       ${due > 0 ? `<div class="due-banner card"><span>📅</span><span><b>${due} Karten</b> zur Wiederholung fällig</span></div>` : ''}
 
-      ${seen === 0 ? `
-        <button class="btn-primary start-session-btn" onclick="App.startModuleSession('m1')" style="background:linear-gradient(135deg,#006B3C,#00914f)">
-          Erste Schritte starten →
-        </button>
-        <div class="quick-tips card" style="font-size:13px;color:var(--text2)">
-          Tipp: Starte mit den wichtigsten Überlebens-Phrasen, bevor du in die Lektionen eintauchst!
-        </div>
-      ` : `
-        <button class="btn-primary start-session-btn" onclick="App.startSession()">
-          Heute lernen →
-        </button>
-      `}
+      <button class="btn-primary start-session-btn" onclick="${seen === 0 ? "App.startModuleSession('m1')" : 'App.startSmartSession()'}">
+        ${seen === 0 ? 'Erste Schritte starten →' : 'Heute lernen →'}
+      </button>
 
       ${typeof AI !== 'undefined' ? AI.errorAnalysis.renderReport() : ''}
 
@@ -827,11 +891,12 @@ const UI = {
     `;
   },
 
-  showPhaseTransition(nextPhase) {
+  showPhaseTransition(nextPhase, isSmart) {
     const el = document.getElementById('learn-content');
     const stats = Session.phaseStats.review;
     const pct = stats.correct + stats.wrong > 0
       ? Math.round(stats.correct / (stats.correct + stats.wrong) * 100) : 0;
+    const nextAction = isSmart ? 'Session._smartStartNew()' : 'Session._startNewPhase()';
     el.innerHTML = `
       <div class="phase-transition">
         <div class="phase-icon">✅</div>
@@ -839,7 +904,7 @@ const UI = {
         <div class="result-circle ${pct>=70?'green':pct>=40?'orange':'red'}">${pct}%</div>
         <p>${stats.correct} richtig, ${stats.wrong} falsch</p>
         <p class="motivate">${this._motivate(pct)}</p>
-        <button class="btn-primary" onclick="Session._startNewPhase()">Weiter zu: Neuer Stoff ✨</button>
+        <button class="btn-primary" onclick="${nextAction}">Weiter zu: Neuer Stoff ✨</button>
       </div>
     `;
   },
@@ -1164,8 +1229,9 @@ const UI = {
         </div>
 
         <div class="summary-buttons">
-          <button class="btn-primary" onclick="App.startSession()">Nochmal lernen</button>
-          <button class="btn-secondary" onclick="UI.navigateTo('home')">Zurück zum Start</button>
+          <button class="btn-primary" onclick="App.startSmartSession()">Weiter lernen →</button>
+          <button class="btn-secondary" onclick="Conversation.showList()">Gespräch üben</button>
+          <button class="btn-secondary" onclick="UI.navigateTo('home')">Fertig für heute ✓</button>
         </div>
       </div>
     `;
@@ -1507,7 +1573,7 @@ const App = {
           document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
           document.getElementById('screen-learn').classList.add('active');
           btn.classList.add('active');
-          App.showLearnMenu();
+          App.startSmartSession();
         } else {
           UI.navigateTo(screen);
         }
@@ -1736,6 +1802,37 @@ const App = {
     UI.showPhase('new', queue.length, category);
   },
 
+  // Conversation-to-lesson mapping for smart sessions
+  _convForUnit: {
+    1:'conv4', 2:'conv4', 3:'conv2', 4:'conv6', 5:'conv16', 6:'conv1',
+    7:'conv15', 8:'conv10', 9:'conv5', 10:'conv7', 11:'conv8', 12:'conv17',
+    13:'conv8', 14:'conv10'
+  },
+
+  startSmartSession() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    document.getElementById('screen-learn').classList.add('active');
+    document.querySelector('[data-screen="learn"]')?.classList.add('active');
+
+    CardEngine.checkUnlocks();
+    const unitId = CardEngine.getCurrentUnit();
+
+    // Phase 1: Collect due cards (all sources, max 12)
+    const dueCards = CardEngine.getDueCards(12);
+
+    // Phase 2: Collect new cards from current lesson (max 8)
+    const newCards = CardEngine.getNewCards(unitId, 8);
+
+    // Phase 3: Pick matching conversation
+    const convId = this._convForUnit[unitId] || null;
+    const convAvailable = convId && typeof CONVERSATIONS !== 'undefined' &&
+      CONVERSATIONS.find(c => c.id === convId);
+
+    // Start the smart session
+    Session.startSmart(dueCards, newCards, convAvailable ? convId : null);
+  },
+
   startSession() {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
@@ -1896,6 +1993,8 @@ const Conversation = {
     return this.current.nodes.find(n => n.id === nodeId);
   },
 
+  _onEndCallback: null, // Called after conversation ends (for smart sessions)
+
   _processNode(nodeId) {
     if (nodeId === 'end') {
       this._showEnd();
@@ -2048,8 +2147,12 @@ const Conversation = {
         ${prog && prog.bestPct > pct ? `<p style="font-size:13px;color:var(--text3)">Dein Rekord: ${prog.bestPct}%</p>` : ''}
         ${prog && prog.bestPct <= pct && prog.attempts > 1 ? `<p style="font-size:13px;color:var(--green);font-weight:600">Neuer Rekord!</p>` : ''}
         <p class="motivate">${UI._motivate(pct)}</p>
-        <button class="btn-primary" onclick="Conversation.start('${this.current.id}')">Nochmal üben</button>
-        <button class="btn-secondary" onclick="Conversation.showList()" style="margin-top:8px">Zurück zur Liste</button>
+        ${this._onEndCallback ? `
+          <button class="btn-primary" onclick="Conversation._onEndCallback(); Conversation._onEndCallback = null;">Weiter zur Auswertung →</button>
+        ` : `
+          <button class="btn-primary" onclick="Conversation.start('${this.current.id}')">Nochmal üben</button>
+          <button class="btn-secondary" onclick="Conversation.showList()" style="margin-top:8px">Zurück zur Liste</button>
+        `}
       </div>
     `;
   }
