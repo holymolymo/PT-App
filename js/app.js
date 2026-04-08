@@ -833,9 +833,10 @@ const UI = {
 
       ${due > 0 ? `<div class="due-banner card"><span>📅</span><span><b>${due} Karten</b> zur Wiederholung fällig</span></div>` : ''}
 
-      <button class="btn-primary start-session-btn" onclick="${seen === 0 ? "App.startModuleSession('m1')" : 'App.startSmartSession()'}">
-        ${seen === 0 ? 'Erste Schritte starten →' : 'Heute lernen →'}
+      <button class="btn-primary start-session-btn" onclick="${seen === 0 ? "App.startModuleSession('m1')" : `App.startLesson(${CardEngine.getCurrentUnit()})`}">
+        ${seen === 0 ? 'Erste Schritte starten →' : 'Weiter lernen →'}
       </button>
+      ${due > 0 && seen > 0 ? `<button class="btn-secondary" onclick="App.startReviewSession()" style="margin-top:8px">${due} Karten wiederholen</button>` : ''}
 
       ${typeof AI !== 'undefined' ? AI.errorAnalysis.renderReport() : ''}
 
@@ -1076,16 +1077,21 @@ const UI = {
     if (!input) return;
     const userAnswer = input.value.trim();
     const card = Session.queue[Session.currentIdx];
-    const correct = card.answer;
-    const isCorrect = userAnswer.toLowerCase() === correct.toLowerCase() ||
-      this._normalize(userAnswer) === this._normalize(correct);
-    // Store user answer for feedback display
+
+    // Use flexible matching with alternatives and typo tolerance
+    const result = this.checkAnswer(userAnswer, card.answer, card.alts || []);
     card._userAnswer = userAnswer;
-    // Check for near-miss (accent/case only)
-    if (!isCorrect && this._normalize(userAnswer) === this._normalize(correct)) {
-      card._nearMiss = 'accent'; // Only accents wrong
+    card._matchType = result.match;
+
+    const isCorrect = result.match !== 'wrong';
+    const quality = result.quality;
+
+    // Show typo note if applicable
+    if (result.match === 'typo' || result.match === 'typo-alt') {
+      card._typoNote = true;
     }
-    this._showFeedback(card, isCorrect, isCorrect ? 4 : 1);
+
+    this._showFeedback(card, isCorrect, quality);
   },
 
   selectChoice(btn, chosen, correct) {
@@ -1108,9 +1114,14 @@ const UI = {
       ? ['Super!','Sehr gut!','Genau richtig!','Das sitzt!','Perfekt!'][Math.floor(Math.random()*5)]
       : 'Fast!';
 
-    // Build user-answer diff for wrong text inputs
+    // Build user-answer feedback
     let userAnswerHTML = '';
-    if (!isCorrect && card._userAnswer) {
+    if (card._typoNote && isCorrect) {
+      userAnswerHTML = `<div class="feedback-user-answer">
+        <span class="feedback-user-label" style="color:var(--orange)">Fast perfekt! Tippfehler:</span>
+        <span class="feedback-user-text">${card._userAnswer}</span>
+      </div>`;
+    } else if (!isCorrect && card._userAnswer) {
       const diff = this._diffAnswer(card._userAnswer, card.answer);
       userAnswerHTML = `<div class="feedback-user-answer">
         <span class="feedback-user-label">Deine Antwort:</span>
@@ -1229,8 +1240,8 @@ const UI = {
         </div>
 
         <div class="summary-buttons">
-          <button class="btn-primary" onclick="App.startSmartSession()">Weiter lernen →</button>
-          <button class="btn-secondary" onclick="Conversation.showList()">Gespräch üben</button>
+          <button class="btn-primary" onclick="App.startLesson(${CardEngine.getCurrentUnit()})">Nächste Lektion →</button>
+          <button class="btn-secondary" onclick="App.startReviewSession()">Karten wiederholen</button>
           <button class="btn-secondary" onclick="UI.navigateTo('home')">Fertig für heute ✓</button>
         </div>
       </div>
@@ -1509,6 +1520,57 @@ const UI = {
     return `<table class="rule-examples-table">${rows.join('')}</table>`;
   },
 
+  // Levenshtein distance for typo tolerance
+  _levenshtein(a, b) {
+    const m = a.length, n = b.length;
+    const dp = Array.from({length: m + 1}, (_, i) => Array(n + 1).fill(0));
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const cost = a[i-1] === b[j-1] ? 0 : 1;
+        dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + cost);
+        // Damerau: transposition
+        if (i > 1 && j > 1 && a[i-1] === b[j-2] && a[i-2] === b[j-1]) {
+          dp[i][j] = Math.min(dp[i][j], dp[i-2][j-2] + cost);
+        }
+      }
+    }
+    return dp[m][n];
+  },
+
+  // Flexible answer checking: exact → alternatives → typo tolerance
+  checkAnswer(userText, correctText, alternatives) {
+    const user = userText.trim();
+    const correct = correctText.trim();
+    const userNorm = this._normalize(user);
+    const correctNorm = this._normalize(correct);
+
+    // Layer 1: Exact match (normalized)
+    if (userNorm === correctNorm) return { match: 'exact', quality: 4 };
+
+    // Layer 2: Check alternatives
+    const alts = alternatives || [];
+    for (const alt of alts) {
+      if (this._normalize(alt.trim()) === userNorm) return { match: 'alt', quality: 4 };
+    }
+
+    // Layer 3: Typo tolerance (Levenshtein)
+    const maxDist = correct.length <= 4 ? 1 : correct.length <= 9 ? 1 : correct.length <= 14 ? 2 : 3;
+    const dist = this._levenshtein(userNorm, correctNorm);
+    if (dist <= maxDist) return { match: 'typo', quality: 3, dist };
+
+    // Also check against alternatives with typo tolerance
+    for (const alt of alts) {
+      const altDist = this._levenshtein(userNorm, this._normalize(alt.trim()));
+      const altMax = alt.length <= 4 ? 1 : alt.length <= 9 ? 1 : 2;
+      if (altDist <= altMax) return { match: 'typo-alt', quality: 3, dist: altDist };
+    }
+
+    // Layer 4: Wrong
+    return { match: 'wrong', quality: 1 };
+  },
+
   _diffAnswer(userText, correctText) {
     // Highlight character differences between user answer and correct answer
     const u = userText.split('');
@@ -1586,26 +1648,127 @@ const App = {
 
   showLearnHub(activeTab) {
     const el = document.getElementById('learn-content');
-    const tab = activeTab || 'smart';
+    const tab = activeTab || 'lernen';
 
-    // Tab bar
     const tabs = [
-      {id:'smart', label:'Lernen'},
-      {id:'vocab', label:'Vokabeln'},
-      {id:'grammar', label:'Grammatik'},
-      {id:'conv', label:'Gespräche'},
+      {id:'lernen', label:'Lernen'},
+      {id:'ueben', label:'Üben'},
+      {id:'entdecken', label:'Entdecken'},
     ];
     const tabBar = `<div class="learn-tabs">${tabs.map(t =>
       `<button class="learn-tab ${t.id === tab ? 'active' : ''}" onclick="App.showLearnHub('${t.id}')">${t.label}</button>`
     ).join('')}</div>`;
 
     let content = '';
-    if (tab === 'smart') content = this._learnHubSmart();
-    else if (tab === 'vocab') content = this._learnHubVocab();
-    else if (tab === 'grammar') content = this._learnHubGrammar();
-    else if (tab === 'conv') content = this._learnHubConv();
+    if (tab === 'lernen') content = this._learnHubLernen();
+    else if (tab === 'ueben') content = this._learnHubUeben();
+    else if (tab === 'entdecken') content = this._learnHubEntdecken();
 
     el.innerHTML = tabBar + content;
+  },
+
+  _learnHubLernen() {
+    CardEngine.checkUnlocks();
+    const all = CardEngine.buildAll();
+    const unitId = CardEngine.getCurrentUnit();
+    const lesson = LESSONS.find(l => l.id === unitId);
+    const unitProg = DB.getUnitProgress(unitId, all);
+    const unitCards = all.filter(c => c.unit === unitId);
+    const seenCount = unitCards.filter(c => DB.getCardState(c.id)).length;
+
+    // Build lesson path
+    const pathHTML = LESSONS.map(l => {
+      const prog = DB.getUnitProgress(l.id, all);
+      const isCurrent = l.id === unitId;
+      const isLocked = !l.unlocked && l.id > 1;
+      const isDone = prog >= 60;
+      return `<div class="path-node ${isCurrent ? 'path-current' : ''} ${isLocked ? 'path-locked' : ''} ${isDone ? 'path-done' : ''}"
+        ${!isLocked ? `onclick="App.startLesson(${l.id})"` : ''}>
+        <div class="path-badge" style="background:${l.color}">${isDone ? '✓' : l.id}</div>
+        <div class="path-info">
+          <div class="path-title">${l.title}</div>
+          <div class="path-sub">${isLocked ? '🔒' : prog + '%'}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="learn-hub-section">
+      <div class="learn-hub-card card" onclick="App.startSmartSession()" style="cursor:pointer">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:36px">🚀</div>
+          <div style="flex:1">
+            <div style="font-size:17px;font-weight:800">Nächste Lektion</div>
+            <div style="font-size:13px;color:var(--text2);margin-top:2px">
+              Lektion ${unitId}: ${lesson?.title || ''} · ${seenCount}/${unitCards.length} Karten
+            </div>
+          </div>
+          <div style="color:var(--accent);font-size:20px;font-weight:700">→</div>
+        </div>
+        <div class="progress-bar-wrap" style="margin-top:10px">
+          <div class="progress-bar" style="width:${unitProg}%;background:${lesson?.color||'var(--accent)'}"></div>
+        </div>
+      </div>
+
+      <div class="chart-title" style="margin-top:16px">Lernpfad</div>
+      <div class="path-list">${pathHTML}</div>
+    </div>`;
+  },
+
+  _learnHubUeben() {
+    const all = CardEngine.buildAll();
+    const due = all.filter(c => { const s = DB.getCardState(c.id); return s && SRS.isDue(s); }).length;
+
+    // Weakness info
+    const weakHTML = typeof AI !== 'undefined' ? AI.errorAnalysis.renderReport() : '';
+
+    // Quick practice options
+    const convs = typeof CONVERSATIONS !== 'undefined' ? CONVERSATIONS : [];
+    const unplayed = convs.filter(c => !Conversation._getConvProgress(c.id));
+    const suggestedConv = unplayed.length > 0 ? unplayed[0] : convs[0];
+
+    return `<div class="learn-hub-section">
+      ${due > 0 ? `
+        <div class="learn-hub-card card" onclick="App.startReviewSession()" style="cursor:pointer">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:36px">🔄</div>
+            <div style="flex:1">
+              <div style="font-size:17px;font-weight:800">Wiederholung</div>
+              <div style="font-size:13px;color:var(--text2)">${due} Karten fällig</div>
+            </div>
+            <div style="color:var(--accent);font-size:20px;font-weight:700">→</div>
+          </div>
+        </div>
+      ` : `<div class="card" style="text-align:center;padding:20px;color:var(--text2)">
+        <div style="font-size:32px;margin-bottom:8px">✅</div>
+        <div style="font-weight:600">Keine Karten fällig!</div>
+        <div style="font-size:13px;margin-top:4px">Komm morgen wieder oder lerne neue Inhalte.</div>
+      </div>`}
+
+      ${weakHTML}
+
+      <div class="chart-title" style="margin-top:16px">Gespräch üben</div>
+      ${suggestedConv ? `
+        <div class="conv-item card" onclick="Conversation.start('${suggestedConv.id}')" style="cursor:pointer">
+          <span class="conv-icon">${suggestedConv.icon}</span>
+          <div class="conv-info">
+            <div class="conv-title">${suggestedConv.title}</div>
+            <div class="conv-sub">${suggestedConv.subtitle}</div>
+          </div>
+          <span style="color:var(--accent)">→</span>
+        </div>
+      ` : ''}
+      <button class="btn-secondary" onclick="Conversation.showList()" style="margin-top:8px;font-size:13px">Alle ${convs.length} Gespräche →</button>
+    </div>`;
+  },
+
+  _learnHubEntdecken() {
+    // Combined vocab + grammar browser
+    return `<div class="learn-hub-section">
+      <div class="chart-title">Vokabeln nach Thema</div>
+      ${this._learnHubVocab()}
+      <div class="chart-title" style="margin-top:16px">Grammatik nach Lektion</div>
+      ${this._learnHubGrammar()}
+    </div>`;
   },
 
   _learnHubSmart() {
@@ -2066,6 +2229,93 @@ const App = {
 
     // Start the smart session
     Session.startSmart(dueCards, newCards, convAvailable ? convId : null);
+  },
+
+  startLesson(unitId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    document.getElementById('screen-learn').classList.add('active');
+    document.querySelector('[data-screen="learn"]')?.classList.add('active');
+
+    // Build a structured lesson with 4 phases
+    const unitCards = CardEngine.forUnit(unitId);
+    const unseen = unitCards.filter(c => !DB.getCardState(c.id));
+    const weak = unitCards.filter(c => { const s = DB.getCardState(c.id); return s && SRS.masteryScore(s) < 50; });
+
+    // Phase 1: Introduction (5 cards, recognition = multiple choice)
+    const introCards = CardEngine._shuffle(unseen.filter(c => c.type === 'vocab' || c.type === 'phrase')).slice(0, 5);
+    // Phase 2: Practice (8 cards, mixed types)
+    const practiceCards = CardEngine._shuffle([
+      ...unseen.filter(c => c.type === 'conjugation' || c.type === 'rule-exercise').slice(0, 4),
+      ...unseen.filter(c => c.type === 'context').slice(0, 2),
+      ...CardEngine._shuffle(weak).slice(0, 2)
+    ]).slice(0, 8);
+    // Phase 3: Production (5 cards, DE→PT direction + conjugations)
+    const prodCards = CardEngine._shuffle([
+      ...unseen.filter(c => c.dir === 'de-pt').slice(0, 3),
+      ...unseen.filter(c => c.type === 'rule-exercise' && c.exerciseType === 'translate').slice(0, 2)
+    ]).slice(0, 5);
+
+    const allCards = [...introCards, ...practiceCards, ...prodCards];
+    // Deduplicate
+    const seenIds = new Set();
+    const queue = allCards.filter(c => { if (seenIds.has(c.id)) return false; seenIds.add(c.id); return true; });
+
+    if (queue.length === 0) {
+      // All cards seen — start review instead
+      this.startReviewSession();
+      return;
+    }
+
+    // Pick matching conversation for Phase 4
+    const convId = this._convForUnit[unitId];
+
+    Session._moduleId = null;
+    Session._smartConvId = convId || null;
+    Session.stats = { correct: 0, wrong: 0, seen: 0 };
+    Session.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
+    Session._recentResults = [];
+    Session._sessionSeenIds = new Set();
+    Session.startTime = Date.now();
+    Session.phase = 'new';
+    Session.queue = queue;
+    Session.currentIdx = 0;
+    DB.updateStreak();
+
+    const lesson = LESSONS.find(l => l.id === unitId);
+    UI.showPhase('new', queue.length, lesson ? `Lektion ${unitId}: ${lesson.title}` : '');
+  },
+
+  startReviewSession() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    document.getElementById('screen-learn').classList.add('active');
+    document.querySelector('[data-screen="learn"]')?.classList.add('active');
+
+    const dueCards = CardEngine.getDueCards(20);
+    if (dueCards.length === 0) {
+      document.getElementById('learn-content').innerHTML = `
+        <div class="pre-session" style="padding-top:60px">
+          <div style="font-size:48px">✅</div>
+          <h2>Alles wiederholt!</h2>
+          <p style="color:var(--text2)">Keine Karten fällig. Komm morgen wieder oder lerne neue Inhalte.</p>
+          <button class="btn-primary" onclick="App.showLearnHub()">Zurück</button>
+        </div>`;
+      return;
+    }
+
+    Session._moduleId = null;
+    Session._smartConvId = undefined;
+    Session.stats = { correct: 0, wrong: 0, seen: 0 };
+    Session.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
+    Session._recentResults = [];
+    Session._sessionSeenIds = new Set();
+    Session.startTime = Date.now();
+    Session.phase = 'review';
+    Session.queue = dueCards;
+    Session.currentIdx = 0;
+    DB.updateStreak();
+    UI.showPhase('review', dueCards.length);
   },
 
   startSession() {

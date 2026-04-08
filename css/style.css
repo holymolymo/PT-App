@@ -1060,6 +1060,34 @@ html, body {
 .learn-hub-card { cursor: pointer; transition: transform .15s; }
 .learn-hub-card:active { transform: scale(.98); }
 
+/* Lesson path */
+.path-list {
+  display: flex; flex-direction: column; gap: var(--sp-2);
+}
+.path-node {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3); border-radius: var(--radius-sm);
+  background: var(--bg2); border: var(--card-border);
+  cursor: pointer; transition: all .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.path-node:active { transform: scale(.98); }
+.path-node.path-locked { opacity: .35; cursor: default; }
+.path-node.path-current {
+  border: 1.5px solid var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+.path-node.path-done { opacity: .7; }
+.path-badge {
+  width: 32px; height: 32px; border-radius: var(--radius-xs);
+  color: white; font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.path-info { flex: 1; min-width: 0; }
+.path-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.path-sub { font-size: 11px; color: var(--text3); }
+
 /* Grammar items */
 .grammar-item {
   display: flex; align-items: center; gap: 8px;
