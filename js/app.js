@@ -1568,12 +1568,11 @@ const App = {
       btn.addEventListener('click', () => {
         const screen = btn.dataset.screen;
         if (screen === 'learn') {
-          // Go to learn screen but don't start session automatically
           document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
           document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
           document.getElementById('screen-learn').classList.add('active');
           btn.classList.add('active');
-          App.startSmartSession();
+          App.showLearnHub();
         } else {
           UI.navigateTo(screen);
         }
@@ -1583,6 +1582,244 @@ const App = {
     // Init data
     CardEngine.checkUnlocks();
     UI.renderHome();
+  },
+
+  showLearnHub(activeTab) {
+    const el = document.getElementById('learn-content');
+    const tab = activeTab || 'smart';
+
+    // Tab bar
+    const tabs = [
+      {id:'smart', label:'Lernen', icon:'📚'},
+      {id:'vocab', label:'Vokabeln', icon:'🔤'},
+      {id:'grammar', label:'Grammatik', icon:'📐'},
+      {id:'conv', label:'Gespräche', icon:'💬'},
+    ];
+    const tabBar = `<div class="learn-tabs">${tabs.map(t =>
+      `<button class="learn-tab ${t.id === tab ? 'active' : ''}" onclick="App.showLearnHub('${t.id}')">
+        <span class="learn-tab-icon">${t.icon}</span><span>${t.label}</span>
+      </button>`
+    ).join('')}</div>`;
+
+    let content = '';
+    if (tab === 'smart') content = this._learnHubSmart();
+    else if (tab === 'vocab') content = this._learnHubVocab();
+    else if (tab === 'grammar') content = this._learnHubGrammar();
+    else if (tab === 'conv') content = this._learnHubConv();
+
+    el.innerHTML = tabBar + content;
+  },
+
+  _learnHubSmart() {
+    CardEngine.checkUnlocks();
+    const all = CardEngine.buildAll();
+    const due = all.filter(c => { const s = DB.getCardState(c.id); return s && SRS.isDue(s); }).length;
+    const unitId = CardEngine.getCurrentUnit();
+    const lesson = LESSONS.find(l => l.id === unitId);
+    const unitProg = DB.getUnitProgress(unitId, all);
+    const profile = DB.getProfile();
+
+    return `
+      <div class="learn-hub-section">
+        <div class="learn-hub-card card" onclick="App.startSmartSession()" style="cursor:pointer">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:36px">🚀</div>
+            <div style="flex:1">
+              <div style="font-size:17px;font-weight:800">Smart Session starten</div>
+              <div style="font-size:13px;color:var(--text2);margin-top:2px">
+                ${due > 0 ? `${due} Karten fällig` : 'Neue Karten lernen'}
+                 · Lektion ${unitId}: ${unitProg}%
+              </div>
+            </div>
+            <div style="color:var(--accent);font-size:20px">→</div>
+          </div>
+        </div>
+
+        <div class="chart-title" style="margin-top:16px">Aktuelle Lektion</div>
+        <div class="card" style="display:flex;gap:12px;align-items:center">
+          <div class="unit-badge" style="background:${lesson?.color||'#006B3C'}">${unitId}</div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:14px">${lesson?.title || '—'}</div>
+            <div style="font-size:12px;color:var(--text2)">${lesson?.subtitle || ''}</div>
+            <div class="progress-bar-wrap" style="margin-top:6px">
+              <div class="progress-bar" style="width:${unitProg}%;background:${lesson?.color||'#006B3C'}"></div>
+            </div>
+          </div>
+          <div style="font-size:15px;font-weight:800">${unitProg}%</div>
+        </div>
+
+        ${typeof AI !== 'undefined' && AI.errorAnalysis.getWeaknesses(3).length > 0 ? `
+          <div class="chart-title" style="margin-top:16px">Schwächen gezielt üben</div>
+          <div class="card" onclick="App.startWeaknessSession()" style="cursor:pointer;display:flex;align-items:center;gap:12px">
+            <div style="font-size:24px">🎯</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:14px">Schwächen-Training</div>
+              <div style="font-size:12px;color:var(--text2)">Karten üben, die dir schwer fallen</div>
+            </div>
+            <div style="color:var(--accent)">→</div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  },
+
+  _learnHubVocab() {
+    const cards = CardEngine.buildAll();
+    const catMap = {};
+    cards.filter(c => c.hint && (c.type === 'vocab' || c.type === 'phrase')).forEach(c => {
+      if (!catMap[c.hint]) catMap[c.hint] = { total: 0, seen: 0 };
+      catMap[c.hint].total++;
+      if (DB.getCardState(c.id)) catMap[c.hint].seen++;
+    });
+
+    const sections = {
+      'Grundlagen': ['essencial','básico','expressões','emergência'],
+      'Menschen': ['profissões','nationalidades','países','família','descrição física','carácter','cabelo','olhos','social'],
+      'Essen & Trinken': ['comida','alimentação','bebidas','restaurante','refeições'],
+      'Einkaufen & Kleidung': ['compras','roupa','comércio'],
+      'Unterwegs': ['transportes','direções','localização','lugares','hotel'],
+      'Alltag & Freizeit': ['actividades','rotina','tempo','lazer','cultura','sentimentos','desporto'],
+      'Gesundheit': ['corpo','saúde','farmácia'],
+      'Kommunikation': ['comunicação','tecnologia','burocracia','habitação'],
+    };
+
+    const usedCats = new Set();
+    let html = '';
+    Object.entries(sections).forEach(([title, cats]) => {
+      const validCats = cats.filter(c => catMap[c]);
+      if (!validCats.length) return;
+      const catsHTML = validCats.map(cat => {
+        usedCats.add(cat);
+        const d = catMap[cat];
+        const pct = d.total > 0 ? Math.round(d.seen / d.total * 100) : 0;
+        return `<button class="vocab-cat-btn card" onclick="App.startCategorySession('${UI._esc(cat)}')">
+          <div class="vocab-cat-info"><div class="vocab-cat-name">${cat}</div><div class="vocab-cat-count">${d.seen}/${d.total}</div></div>
+          <div class="vocab-cat-bar-wrap"><div class="vocab-cat-bar" style="width:${pct}%"></div></div>
+        </button>`;
+      }).join('');
+      html += `<div class="vocab-section"><div class="chart-title">${title}</div><div class="vocab-cats">${catsHTML}</div></div>`;
+    });
+
+    // Uncategorized
+    const uncat = Object.keys(catMap).filter(k => !usedCats.has(k));
+    if (uncat.length) {
+      html += `<div class="vocab-section"><div class="chart-title">Weitere</div><div class="vocab-cats">${uncat.map(cat => {
+        const d = catMap[cat]; const pct = d.total > 0 ? Math.round(d.seen / d.total * 100) : 0;
+        return `<button class="vocab-cat-btn card" onclick="App.startCategorySession('${UI._esc(cat)}')"><div class="vocab-cat-info"><div class="vocab-cat-name">${cat}</div><div class="vocab-cat-count">${d.seen}/${d.total}</div></div><div class="vocab-cat-bar-wrap"><div class="vocab-cat-bar" style="width:${pct}%"></div></div></button>`;
+      }).join('')}</div></div>`;
+    }
+
+    const totalVocab = Object.values(catMap).reduce((s,d) => s+d.total, 0);
+    const totalSeen = Object.values(catMap).reduce((s,d) => s+d.seen, 0);
+    return `<div class="learn-hub-section">
+      <p style="color:var(--text2);font-size:14px;margin-bottom:12px">${totalSeen}/${totalVocab} Wörter gelernt</p>
+      ${html}
+    </div>`;
+  },
+
+  _learnHubGrammar() {
+    const cards = CardEngine.buildAll();
+    CardEngine.checkUnlocks();
+
+    // Group grammar by unit
+    const unitGrammar = {};
+    cards.filter(c => c.type === 'rule').forEach(c => {
+      if (!unitGrammar[c.unit]) unitGrammar[c.unit] = [];
+      unitGrammar[c.unit].push(c);
+    });
+
+    let html = '';
+    LESSONS.forEach(lesson => {
+      const rules = unitGrammar[lesson.id] || [];
+      if (!rules.length) return;
+      const isLocked = !lesson.unlocked && lesson.id > 1;
+
+      const rulesHTML = rules.map(r => {
+        const state = DB.getCardState(r.id);
+        const mastery = SRS.masteryScore(state);
+        const color = mastery >= 70 ? 'var(--green)' : mastery >= 30 ? 'var(--orange)' : 'var(--text3)';
+        const dot = mastery >= 70 ? '✓' : mastery > 0 ? '◐' : '○';
+        return `<div class="grammar-item" onclick="App.startGrammarSession('${r.id}')" style="cursor:pointer">
+          <span style="color:${color};font-size:12px;width:16px">${dot}</span>
+          <span style="flex:1;font-size:13px;font-weight:500">${r.question}</span>
+          <span style="font-size:11px;color:${color};font-weight:700">${mastery}%</span>
+        </div>`;
+      }).join('');
+
+      html += `
+        <div class="card ${isLocked ? 'locked' : ''}" style="margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div class="unit-num" style="background:${lesson.color};width:28px;height:28px;font-size:11px">${lesson.id}</div>
+            <div style="font-weight:700;font-size:14px;flex:1">${lesson.title}</div>
+            ${isLocked ? '<span>🔒</span>' : ''}
+          </div>
+          ${isLocked ? '' : rulesHTML}
+        </div>`;
+    });
+
+    return `<div class="learn-hub-section">
+      <p style="color:var(--text2);font-size:14px;margin-bottom:12px">${cards.filter(c => c.type === 'rule').length} Grammatikregeln · Tippe auf eine Regel zum Üben</p>
+      ${html}
+    </div>`;
+  },
+
+  _learnHubConv() {
+    const convs = typeof CONVERSATIONS !== 'undefined' ? CONVERSATIONS : [];
+    const sorted = [...convs].sort((a, b) => {
+      const pa = Conversation._getConvProgress(a.id);
+      const pb = Conversation._getConvProgress(b.id);
+      if (!pa && pb) return -1;
+      if (pa && !pb) return 1;
+      if (pa && pb) return pa.bestPct - pb.bestPct;
+      return 0;
+    });
+
+    const completedCount = convs.filter(c => Conversation._getConvProgress(c.id)).length;
+    const listHTML = sorted.map(c => {
+      const prog = Conversation._getConvProgress(c.id);
+      let badge = prog
+        ? `<span style="font-size:13px;font-weight:700;color:${prog.bestPct >= 70 ? 'var(--green)' : prog.bestPct >= 40 ? 'var(--orange)' : 'var(--red)'}">${prog.bestPct}%</span>`
+        : `<span class="conv-diff">Neu</span>`;
+      let sub = prog ? `${prog.attempts}x geübt · Beste: ${prog.bestPct}%` : c.subtitle;
+      return `<button class="conv-item card" onclick="Conversation.start('${c.id}')">
+        <span class="conv-icon">${c.icon}</span>
+        <div class="conv-info"><div class="conv-title">${c.title}</div><div class="conv-sub">${sub}</div></div>
+        ${badge}
+      </button>`;
+    }).join('');
+
+    return `<div class="learn-hub-section">
+      <p style="color:var(--text2);font-size:14px;margin-bottom:12px">${completedCount}/${convs.length} abgeschlossen</p>
+      <div class="conv-list">${listHTML}</div>
+    </div>`;
+  },
+
+  // Start a session for a specific grammar rule + its exercises
+  startGrammarSession(ruleId) {
+    const cards = CardEngine.buildAll();
+    const ruleCard = cards.find(c => c.id === ruleId && c.type === 'rule');
+    const exercises = cards.filter(c => c.type === 'rule-exercise' && c.ruleId === ruleId);
+    if (!ruleCard) return;
+
+    const queue = [ruleCard, ...CardEngine._shuffle(exercises).slice(0, 8)];
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    document.getElementById('screen-learn').classList.add('active');
+    document.querySelector('[data-screen="learn"]')?.classList.add('active');
+
+    Session._moduleId = null;
+    Session.stats = { correct: 0, wrong: 0, seen: 0 };
+    Session.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
+    Session._recentResults = [];
+    Session._sessionSeenIds = new Set();
+    Session._smartConvId = undefined;
+    Session.startTime = Date.now();
+    Session.phase = 'new';
+    Session.queue = queue;
+    Session.currentIdx = 0;
+    DB.updateStreak();
+    UI.showPhase('new', queue.length, ruleCard.question);
   },
 
   showLearnMenu() {
