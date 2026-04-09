@@ -44,7 +44,7 @@ const DB = {
   // ── Card SRS states ────────────────────────────────────────────────────
   getCardState(cardId) {
     const raw = localStorage.getItem(this.PREFIX + 'card_' + cardId);
-    return raw ? JSON.parse(raw) : null;
+    try { return raw ? JSON.parse(raw) : null; } catch { return null; }
   },
 
   setCardState(cardId, state) {
@@ -65,7 +65,8 @@ const DB = {
 
   // ── User profile ───────────────────────────────────────────────────────
   getProfile() {
-    const raw = localStorage.getItem(this.PREFIX + 'profile');
+    let raw = localStorage.getItem(this.PREFIX + 'profile');
+    if (raw) { try { JSON.parse(raw); } catch { raw = null; } }
     const defaults = {
       streak: 0,
       longestStreak: 0,

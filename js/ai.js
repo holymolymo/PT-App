@@ -80,6 +80,8 @@ WICHTIGE REGELN:
       this.isLoading = true;
 
       this.messages.push({ role: 'user', content: userText });
+      // Keep last 20 messages to avoid exceeding API context limits
+      if (this.messages.length > 20) this.messages = this.messages.slice(-20);
       this._render();
 
       try {

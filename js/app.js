@@ -168,14 +168,12 @@ const CardEngine = {
       });
     });
 
-    // Extra verbs — conjugation cards (presente only for integration)
+    // Extra verbs — conjugation cards (all 4 tenses)
     (EXTRA_VERBS || []).forEach(v => {
-      const tenses = ['presente', 'perfeito', 'imperfeito'];
+      const tenses = ['presente', 'perfeito', 'imperfeito', 'futuro_ir'];
       tenses.forEach(t => {
         if (!v[t]) return;
         Object.keys(v[t]).forEach(pronoun => {
-          const existingId = `ev${v.id.replace('ev','')}_${t}_${pronoun.replace(/\//g,'')}`;
-          // Only add if not already in lessons
           cards.push({
             id: 'xv_' + v.id + '_' + t + '_' + pronoun.replace(/[ /]/g,''),
             unit: 0,
@@ -1573,7 +1571,7 @@ const UI = {
 
   _diffAnswer(userText, correctText) {
     // Highlight character differences between user answer and correct answer
-    const u = userText.split('');
+    const u = userText.toLowerCase().split('');
     const c = correctText.toLowerCase().split('');
     let result = '';
     for (let i = 0; i < u.length; i++) {
@@ -2002,7 +2000,7 @@ const App = {
       <div class="pre-session">
         <div class="mode-toggle">
           <button class="mode-btn active">Lektionen</button>
-          <button class="mode-btn" onclick="App.showVocabBrowser()">Vokabeln</button>
+          <button class="mode-btn" onclick="App.showLearnHub('entdecken')">Vokabeln</button>
           <button class="mode-btn" onclick="Conversation.showList()">Gespräche</button>
           <button class="mode-btn" onclick="AI.conversation.showScenarios()">AI Chat</button>
         </div>
@@ -2118,7 +2116,7 @@ const App = {
     el.innerHTML = `
       <div class="pre-session">
         <div class="mode-toggle">
-          <button class="mode-btn" onclick="App.showLearnMenu()">Lektionen</button>
+          <button class="mode-btn" onclick="App.showLearnHub()">Lektionen</button>
           <button class="mode-btn active">Vokabeln</button>
           <button class="mode-btn" onclick="Conversation.showList()">Gespräche</button>
         </div>
@@ -2352,6 +2350,7 @@ const App = {
       const reader = new FileReader();
       reader.onload = evt => {
         if (DB.importData(evt.target.result)) {
+          CardEngine._cache = null; // Clear card cache
           alert('Daten erfolgreich importiert!');
           UI.renderHome();
         } else {
@@ -2449,8 +2448,8 @@ const Conversation = {
     el.innerHTML = `
       <div class="conv-header">
         <div class="mode-toggle">
-          <button class="mode-btn" onclick="App.showLearnMenu()">Lektionen</button>
-          <button class="mode-btn" onclick="App.showVocabBrowser()">Vokabeln</button>
+          <button class="mode-btn" onclick="App.showLearnHub()">Lektionen</button>
+          <button class="mode-btn" onclick="App.showLearnHub('entdecken')">Vokabeln</button>
           <button class="mode-btn active">Gespräche</button>
           <button class="mode-btn" onclick="AI.conversation.showScenarios()">AI Chat</button>
         </div>
@@ -2475,7 +2474,11 @@ const Conversation = {
     return this.current.nodes.find(n => n.id === nodeId);
   },
 
-  _onEndCallback: null, // Called after conversation ends (for smart sessions)
+  _onEndCallback: null,
+
+  _clearCallback() {
+    this._onEndCallback = null;
+  },
 
   _processNode(nodeId) {
     if (nodeId === 'end') {
@@ -2593,7 +2596,7 @@ const Conversation = {
 
     el.innerHTML = `
       <div class="chat-header">
-        <button class="btn-end-session" onclick="Conversation.showList()">←</button>
+        <button class="btn-end-session" onclick="Conversation._clearCallback(); Conversation.showList()">←</button>
         <div class="chat-header-info">
           <span>${this.current.icon} ${this.current.title}</span>
           <span class="chat-diff">${this.current.difficulty}</span>
