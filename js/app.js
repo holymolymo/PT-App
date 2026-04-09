@@ -1076,8 +1076,10 @@ const UI = {
     const userAnswer = input.value.trim();
     const card = Session.queue[Session.currentIdx];
 
-    // Use flexible matching with alternatives and typo tolerance
-    const result = this.checkAnswer(userAnswer, card.answer, card.alts || []);
+    // Auto-generate alternatives based on card type
+    const autoAlts = this._generateAlts(card);
+    const allAlts = [...(card.alts || []), ...autoAlts];
+    const result = this.checkAnswer(userAnswer, card.answer, allAlts);
     card._userAnswer = userAnswer;
     card._matchType = result.match;
 
@@ -1516,6 +1518,45 @@ const UI = {
       return `<tr><td class="ex-pt" colspan="2">${ex}</td></tr>`;
     });
     return `<table class="rule-examples-table">${rows.join('')}</table>`;
+  },
+
+  // Auto-generate alternative accepted answers
+  _generateAlts(card) {
+    const alts = [];
+    const a = card.answer;
+    if (!a) return alts;
+
+    // Strip/add articles: "o café" ↔ "café" ↔ "um café"
+    const articleMatch = a.match(/^(o|a|os|as|um|uma|uns|umas)\s+(.+)$/i);
+    if (articleMatch) {
+      alts.push(articleMatch[2]); // without article
+      if (articleMatch[1] === 'o') alts.push('um ' + articleMatch[2]);
+      if (articleMatch[1] === 'a') alts.push('uma ' + articleMatch[2]);
+    }
+
+    // Gender variants: obrigado ↔ obrigada
+    if (a.includes('/')) {
+      a.split('/').forEach(v => alts.push(v.trim()));
+    }
+    if (a.endsWith('o')) alts.push(a.slice(0, -1) + 'a');
+    if (a.endsWith('a') && !a.endsWith('ça')) alts.push(a.slice(0, -1) + 'o');
+
+    // With/without period
+    if (a.endsWith('.')) alts.push(a.slice(0, -1));
+    if (a.endsWith('!')) alts.push(a.slice(0, -1));
+    if (!a.endsWith('.') && !a.endsWith('!')) alts.push(a + '.');
+
+    // For phrases: accept with/without "Eu" at start
+    if (a.toLowerCase().startsWith('eu ')) alts.push(a.substring(3));
+    if (!a.toLowerCase().startsWith('eu ') && card.type === 'phrase') alts.push('Eu ' + a);
+
+    // German answers: accept with/without "der/die/das"
+    if (card.dir === 'pt-de') {
+      const deArticle = a.match(/^(der|die|das|ein|eine)\s+(.+)$/i);
+      if (deArticle) alts.push(deArticle[2]);
+    }
+
+    return alts;
   },
 
   // Levenshtein distance for typo tolerance
@@ -2460,9 +2501,12 @@ const Conversation = {
     `;
   },
 
-  start(convId) {
+  start(convId, hideDeTranslations) {
     const convs = typeof CONVERSATIONS !== 'undefined' ? CONVERSATIONS : [];
     this.current = convs.find(c => c.id === convId);
+    // After first completion, hide German translations to increase difficulty
+    const prog = this._getConvProgress(convId);
+    this._hideDE = hideDeTranslations || (prog && prog.attempts >= 1);
     if (!this.current) return;
     this.nodeIdx = 0;
     this.messages = [];
@@ -2526,24 +2570,41 @@ const Conversation = {
   submitText(nodeId) {
     const input = document.getElementById('conv-input');
     if (!input) return;
-    const text = input.value.trim().toLowerCase();
+    const text = input.value.trim();
     if (!text) return;
 
     const node = this._findNode(nodeId);
     this.score.total++;
-    // Remove prompt
     this.messages = this.messages.filter(m => m.speaker !== 'prompt');
 
-    // Check keywords
-    const normalized = UI._normalize(text);
-    const matched = node.keywords.some(kw => normalized.includes(UI._normalize(kw)));
+    // Flexible matching: keywords OR Levenshtein similarity to expected answer
+    const normalized = UI._normalize(text.toLowerCase());
+    const keywordMatch = node.keywords.some(kw => normalized.includes(UI._normalize(kw)));
 
-    this.messages.push({ speaker: 'learner', pt: input.value, wrong: !matched });
+    // Also check similarity to the expected answer (accept if close enough)
+    const expectedNorm = UI._normalize((node.answer || '').toLowerCase());
+    const similarity = expectedNorm.length > 0 ? 1 - (UI._levenshtein(normalized, expectedNorm) / Math.max(normalized.length, expectedNorm.length)) : 0;
+    const similarEnough = similarity > 0.6; // 60%+ similarity = accept
+
+    // Also accept if user typed enough correct words from the answer
+    const answerWords = expectedNorm.split(/\s+/).filter(w => w.length > 2);
+    const userWords = normalized.split(/\s+/);
+    const wordMatches = answerWords.filter(aw => userWords.some(uw => UI._normalize(uw).includes(aw) || aw.includes(UI._normalize(uw))));
+    const wordMatchRatio = answerWords.length > 0 ? wordMatches.length / answerWords.length : 0;
+    const enoughWords = wordMatchRatio >= 0.5; // 50%+ of key words present
+
+    const matched = keywordMatch || similarEnough || enoughWords;
+
+    this.messages.push({ speaker: 'learner', pt: text, wrong: !matched });
 
     if (matched) {
       this.score.correct++;
+      // Show the "ideal" answer if user's was different
+      if (!keywordMatch && (similarEnough || enoughWords)) {
+        this.messages.push({ speaker: 'system', text: `Gut! Ideal wäre: "${node.answer}"` });
+      }
       this._render();
-      setTimeout(() => this._processNode(node.next), 600);
+      setTimeout(() => this._processNode(node.next), matched && !keywordMatch ? 1500 : 600);
     } else {
       this.messages.push({ speaker: 'system', text: `Tipp: ${node.hint || node.answer}` });
       this._render();
@@ -2556,17 +2617,18 @@ const Conversation = {
 
   _render(activeNode) {
     const el = document.getElementById('learn-content');
+    const hideDE = this._hideDE;
     const msgsHTML = this.messages.map(m => {
       if (m.speaker === 'npc') {
         return `<div class="chat-bubble chat-npc">
           <div class="chat-pt">${m.pt}</div>
-          <div class="chat-de">${m.de}</div>
+          ${!hideDE && m.de ? `<div class="chat-de">${m.de}</div>` : ''}
         </div>`;
       }
       if (m.speaker === 'learner') {
         return `<div class="chat-bubble chat-learner ${m.wrong ? 'chat-wrong' : ''}">
           <div class="chat-pt">${m.pt}</div>
-          ${m.de ? `<div class="chat-de">${m.de}</div>` : ''}
+          ${!hideDE && m.de ? `<div class="chat-de">${m.de}</div>` : ''}
         </div>`;
       }
       if (m.speaker === 'prompt') {
@@ -2635,8 +2697,9 @@ const Conversation = {
         ${this._onEndCallback ? `
           <button class="btn-primary" onclick="Conversation._onEndCallback(); Conversation._onEndCallback = null;">Weiter zur Auswertung →</button>
         ` : `
-          <button class="btn-primary" onclick="Conversation.start('${this.current.id}')">Nochmal üben</button>
-          <button class="btn-secondary" onclick="Conversation.showList()" style="margin-top:8px">Zurück zur Liste</button>
+          <button class="btn-primary" onclick="Conversation.start('${this.current.id}', true)">Ohne Hilfe wiederholen</button>
+          <button class="btn-secondary" onclick="Conversation.start('${this.current.id}')" style="margin-top:8px">Mit Übersetzungen üben</button>
+          <button class="btn-secondary" onclick="Conversation.showList()" style="margin-top:8px">Andere Gespräche</button>
         `}
       </div>
     `;
