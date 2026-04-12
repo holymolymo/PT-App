@@ -1702,7 +1702,6 @@ const App = {
     CardEngine.checkUnlocks();
 
     // First-time onboarding
-    const profile = DB.getProfile();
     if (!profile.onboardingDone) {
       this._showOnboarding();
     } else {

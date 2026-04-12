@@ -204,7 +204,7 @@ window.CONVERSATIONS = [
         ],next:'c6n3'},
       {id:'c6n3',speaker:'npc',type:'say',pt:'A fruta está no corredor três, à direita.',de:'Das Obst ist in Gang drei, rechts.',next:'c6n4'},
       {id:'c6n4',speaker:'learner',type:'write',prompt:'Bedanke dich',
-        keywords:['obrigad','muito','agradeç','danke'],hint:'Obrigado/a!',
+        keywords:['obrigad','muito','agradeç'],hint:'Obrigado/a!',
         answer:'Obrigado!',next:'c6n5'},
       {id:'c6n5',speaker:'npc',type:'say',pt:'Na caixa: São doze euros e trinta cêntimos. Precisa de saco?',de:'An der Kasse: Das macht 12,30 Euro. Brauchen Sie eine Tüte?',next:'c6n6'},
       {id:'c6n6',speaker:'learner',type:'choose',prompt:'Sage, dass du keine Tüte brauchst und mit Karte zahlst',
