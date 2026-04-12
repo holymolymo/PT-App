@@ -663,7 +663,7 @@ window.EXTRA_PHRASES = [
   // Alltägliche Situationen
   {id:'ep34',pt:'Com licença, posso passar?',de:'Entschuldigung, darf ich vorbei?',ctx:'geral'},
   {id:'ep35',pt:'Pode falar mais devagar?',de:'Können Sie langsamer sprechen?',ctx:'geral'},
-  {id:'ep36',pt:'Não entendi. Pode repetir?',de:'Ich habe nicht verstanden. Können Sie wiederholen?',ctx:'geral'},
+  {id:'ep36',pt:'Não percebi. Pode repetir?',de:'Ich habe nicht verstanden. Können Sie wiederholen?',ctx:'geral'},
   {id:'ep37',pt:'Como se diz ... em português?',de:'Wie sagt man ... auf Portugiesisch?',ctx:'geral'},
   {id:'ep38',pt:'Falo um pouco de português.',de:'Ich spreche ein bisschen Portugiesisch.',ctx:'geral'},
   {id:'ep39',pt:'Sou alemão/alemã.',de:'Ich bin Deutscher/Deutsche.',ctx:'geral'},

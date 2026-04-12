@@ -26,8 +26,9 @@ window.CONVERSATIONS = [
       {id:'c1n3',speaker:'npc',type:'say',pt:'Com certeza! Mais alguma coisa?',de:'Natürlich! Sonst noch etwas?',next:'c1n4'},
       {id:'c1n4',speaker:'learner',type:'choose',prompt:'Bestelle auch ein Pastel de Nata',
         options:[
-          {pt:'Sim, um pastel de nata, por favor.',de:'Ja, ein Pastel de Nata, bitte.',correct:true,next:'c1n5'},
-          {pt:'Não, obrigado.',de:'Nein, danke.',correct:false,feedback:'Du wolltest doch auch ein Pastel de Nata probieren!',next:'c1n4'},
+          {pt:'Sim, um pastel de nata, por favor.',correct:true,next:'c1n5'},
+          {pt:'Quero uma água, por favor.',correct:false,feedback:'Nicht schlecht, aber du wolltest doch ein Pastel de Nata! "Um pastel de nata, por favor."',next:'c1n4'},
+          {pt:'Não, obrigado.',correct:false,feedback:'Du wolltest doch auch ein Pastel de Nata probieren!',next:'c1n4'},
         ],next:'c1n5'},
       {id:'c1n5',speaker:'npc',type:'say',pt:'Excelente! São dois euros e cinquenta.',de:'Ausgezeichnet! Das macht 2,50 Euro.',next:'c1n6'},
       {id:'c1n6',speaker:'learner',type:'write',prompt:'Sag, dass du mit Karte zahlen möchtest',
@@ -35,7 +36,7 @@ window.CONVERSATIONS = [
         answer:'Posso pagar com cartão?',next:'c1n7'},
       {id:'c1n7',speaker:'npc',type:'say',pt:'Claro que sim! Aqui tem.',de:'Natürlich! Hier bitte.',next:'c1n8'},
       {id:'c1n8',speaker:'learner',type:'write',prompt:'Bedanke dich',
-        keywords:['obrigad','muito','danke','agradeç'],hint:'Muito...',
+        keywords:['obrigad','muito','agradeç'],hint:'Muito...',
         answer:'Muito obrigado!',next:'end'},
     ]
   },
@@ -53,8 +54,9 @@ window.CONVERSATIONS = [
     nodes: [
       {id:'c2n1',speaker:'learner',type:'choose',prompt:'Sprich jemanden an und frage nach dem Weg zum Bahnhof',
         options:[
-          {pt:'Desculpe, onde fica a estação de comboios?',de:'Entschuldigung, wo ist der Bahnhof?',correct:true,next:'c2n2'},
-          {pt:'Olá, quero comboio.',de:'Hallo, ich will Zug.',correct:false,feedback:'Versuche es höflicher! Benutze "Desculpe, onde fica..."',next:'c2n1'},
+          {pt:'Desculpe, onde fica a estação de comboios?',correct:true,next:'c2n2'},
+          {pt:'Desculpe, onde fica o restaurante?',correct:false,feedback:'Du suchst den Bahnhof (estação de comboios), nicht ein Restaurant!',next:'c2n1'},
+          {pt:'Olá, quero comboio.',correct:false,feedback:'Versuche es höflicher! Benutze "Desculpe, onde fica..."',next:'c2n1'},
         ],next:'c2n2'},
       {id:'c2n2',speaker:'npc',type:'say',pt:'Claro! Siga em frente e vire à esquerda na segunda rua.',de:'Natürlich! Gehen Sie geradeaus und biegen Sie in die zweite Straße links ab.',next:'c2n3'},
       {id:'c2n3',speaker:'learner',type:'choose',prompt:'Frage, ob es weit ist',
@@ -216,7 +218,7 @@ window.CONVERSATIONS = [
     color: '#0284c7',
     difficulty: 'A2',
     nodes: [
-      {id:'c7n1',speaker:'npc',type:'say',pt:'Clínica Saúde, bom dia! Em que posso ajudar?',de:'Klinik Saúde, guten Tag! Wie kann ich helfen?',next:'c7n2'},
+      {id:'c7n1',speaker:'npc',type:'say',pt:'Estou? Clínica Saúde, bom dia! Em que posso ajudar?',de:'Hallo? Klinik Saúde, guten Tag! Wie kann ich helfen?',next:'c7n2'},
       {id:'c7n2',speaker:'learner',type:'choose',prompt:'Sage, dass du einen Termin vereinbaren möchtest',
         options:[
           {pt:'Bom dia! Queria marcar uma consulta, por favor.',de:'Guten Tag! Ich möchte einen Termin vereinbaren.',correct:true,next:'c7n3'},
@@ -529,9 +531,10 @@ window.CONVERSATIONS = [
     color: '#dc2626',
     difficulty: 'A2',
     nodes: [
-      {id:'c16n1',speaker:'learner',type:'write',prompt:'Rufe deinen Vermieter an und begrüße ihn',
-        keywords:['dia','tarde','noite','senhor','senhora','olá'],hint:'Bom dia, senhor...',
-        answer:'Bom dia, senhor Silva!',next:'c16n2'},
+      {id:'c16n0',speaker:'npc',type:'say',pt:'Estou?',de:'Hallo? (am Telefon)',next:'c16n1'},
+      {id:'c16n1',speaker:'learner',type:'write',prompt:'Begrüße deinen Vermieter am Telefon',
+        keywords:['dia','tarde','noite','senhor','senhora','olá','estou'],hint:'Bom dia, senhor...',
+        answer:'Bom dia, senhor Silva! Estou a ligar por causa do apartamento.',next:'c16n2'},
       {id:'c16n2',speaker:'npc',type:'say',pt:'Bom dia! Então, está tudo bem com o apartamento?',de:'Guten Tag! Na, ist alles in Ordnung mit der Wohnung?',next:'c16n3'},
       {id:'c16n3',speaker:'learner',type:'choose',prompt:'Erkläre, dass die Waschmaschine kaputt ist',
         options:[

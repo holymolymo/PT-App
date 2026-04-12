@@ -304,19 +304,26 @@ const CardEngine = {
         });
       }
 
-      // 2. FILLBLANK exercise — blank out a key word (longest word > 2 chars)
+      // 2. FILLBLANK exercise — blank out the grammar-relevant word
       const words = ptPart.split(/\s+/);
       if (words.length >= 3) {
-        // Pick the word most likely to be the grammar target (not articles/pronouns)
-        const skipWords = new Set(['eu','tu','ele','ela','nós','eles','elas','você','vocês','o','a','os','as','um','uma','de','em','no','na','do','da','e','é','que','se','não']);
+        // Priority: contracted forms (do/da/no/na/ao/à), verb forms, grammar keywords
+        const skipWords = new Set(['eu','tu','ele','ela','nós','eles','elas','você','vocês','o','a','os','as','um','uma','e','é','que']);
+        const grammarWords = new Set(['do','da','dos','das','no','na','nos','nas','ao','à','aos','às','num','numa','pelo','pela',
+          'me','te','se','lhe','nos','vos','lhes','mim','ti','si','comigo','contigo','consigo',
+          'meu','minha','teu','tua','seu','sua','nosso','nossa',
+          'este','esta','esse','essa','aquele','aquela','isso','isto','aquilo',
+          'mais','menos','tão','muito','pouco','nada','ninguém','nunca','nenhum','algum']);
         let blankIdx = -1;
-        let maxLen = 0;
+        let bestScore = -1;
         words.forEach((w, wi) => {
           const clean = w.replace(/[.,!?]/g, '').toLowerCase();
-          if (clean.length > maxLen && !skipWords.has(clean)) {
-            maxLen = clean.length;
-            blankIdx = wi;
-          }
+          if (skipWords.has(clean) || clean.length < 2) return;
+          // Score: grammar words > verb-like words > other words by length
+          let score = clean.length;
+          if (grammarWords.has(clean)) score += 20; // Grammar target = highest priority
+          else if (clean.match(/^(sou|és|é|somos|são|estou|estás|está|estamos|estão|tenho|tens|tem|temos|têm|vou|vais|vai|vamos|vão|fui|foi|fomos|foram|era|eras|éramos|eram|tinha|tinhas|tínhamos|tinham|fiz|fez|fizemos|fizeram|disse|dissemos|disseram|vi|viu|vimos|viram|pus|pôs|pusemos|puseram|soube|trouxe|pude|quis|houve)$/)) score += 15; // Conjugated verb = high priority
+          if (score > bestScore) { bestScore = score; blankIdx = wi; }
         });
         if (blankIdx >= 0) {
           const blankWord = words[blankIdx].replace(/[.,!?]/g, '');
@@ -2606,7 +2613,12 @@ const Conversation = {
       this._render();
       setTimeout(() => this._processNode(node.next), matched && !keywordMatch ? 1500 : 600);
     } else {
-      this.messages.push({ speaker: 'system', text: `Tipp: ${node.hint || node.answer}` });
+      // Richer feedback: show what was expected and give a helpful hint
+      const feedbackParts = [];
+      if (node.answer) feedbackParts.push(`Richtige Antwort: "${node.answer}"`);
+      if (node.hint && node.hint !== node.answer) feedbackParts.push(`Tipp: ${node.hint}`);
+      if (!node.answer && node.hint) feedbackParts.push(`Tipp: ${node.hint}`);
+      this.messages.push({ speaker: 'system', text: feedbackParts.join('\n') || 'Versuche es nochmal!' });
       this._render();
       setTimeout(() => {
         this.messages = this.messages.filter(m => m.speaker !== 'system');
