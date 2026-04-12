@@ -1153,5 +1153,28 @@ html, body {
   transition: width .4s cubic-bezier(.4,0,.2,1);
 }
 
+/* ── Onboarding ──────────────────────────────────────────────────────── */
+.onboarding {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 60px var(--sp-4) var(--sp-8);
+  animation: fadeSlideUp .5s cubic-bezier(.25,.1,.25,1) both;
+}
+
+/* ── Modal ────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; padding: var(--sp-5);
+  animation: fadeIn .2s ease;
+}
+.modal-card {
+  width: 100%; max-width: 320px;
+  padding: var(--sp-5);
+  text-align: center;
+}
+
 /* ── Utilities ───────────────────────────────────────────────────────── */
 b { font-weight: 700; }

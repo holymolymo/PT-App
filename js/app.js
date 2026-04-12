@@ -1464,9 +1464,20 @@ const UI = {
 
   // ── Helpers ────────────────────────────────────────────────────────────
   confirmEndSession() {
-    if (confirm('Session beenden?')) {
-      Session.end();
-    }
+    // Custom modal instead of browser confirm()
+    const el = document.getElementById('learn-content');
+    const existing = el.innerHTML;
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-card card">
+        <div style="font-size:17px;font-weight:700;margin-bottom:8px">Session beenden?</div>
+        <div style="font-size:14px;color:var(--text2);margin-bottom:16px">Dein Fortschritt wird gespeichert.</div>
+        <button class="btn-primary" onclick="this.closest('.modal-overlay').remove(); Session.end()" style="margin-bottom:8px">Ja, beenden</button>
+        <button class="btn-secondary" onclick="this.closest('.modal-overlay').remove()">Weiter lernen</button>
+      </div>
+    `;
+    document.getElementById('screen-learn').appendChild(overlay);
   },
 
   _motivate(pct) {
@@ -1689,7 +1700,14 @@ const App = {
 
     // Init data
     CardEngine.checkUnlocks();
-    UI.renderHome();
+
+    // First-time onboarding
+    const profile = DB.getProfile();
+    if (!profile.onboardingDone) {
+      this._showOnboarding();
+    } else {
+      UI.renderHome();
+    }
   },
 
   showLearnHub(activeTab) {
@@ -2410,6 +2428,43 @@ const App = {
     input.click();
   },
 
+  _showOnboarding() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-home').classList.add('active');
+    const el = document.getElementById('home-content');
+    el.innerHTML = `
+      <div class="onboarding">
+        <div style="font-size:48px;margin-bottom:16px">🇵🇹</div>
+        <h1 style="font-size:28px;font-weight:800;letter-spacing:-.5px">Bem-vindo!</h1>
+        <p style="color:var(--text2);font-size:16px;margin-top:8px;line-height:1.5">
+          Lerne Europäisches Portugiesisch — Schritt für Schritt, mit Wissenschaft.
+        </p>
+
+        <div class="card" style="text-align:left;margin-top:24px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:12px;align-items:center">
+            <div style="font-size:20px;width:32px;text-align:center">📚</div>
+            <div><div style="font-weight:700;font-size:14px">14 Lektionen</div><div style="font-size:12px;color:var(--text2)">Vom Buch "Aprender Português 1"</div></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center">
+            <div style="font-size:20px;width:32px;text-align:center">💬</div>
+            <div><div style="font-weight:700;font-size:14px">18 Gespräche</div><div style="font-size:12px;color:var(--text2)">Übe in echten Situationen</div></div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center">
+            <div style="font-size:20px;width:32px;text-align:center">🧠</div>
+            <div><div style="font-weight:700;font-size:14px">Intelligente Wiederholung</div><div style="font-size:12px;color:var(--text2)">SRS-Algorithmus vergisst nichts</div></div>
+          </div>
+        </div>
+
+        <button class="btn-primary" style="margin-top:24px" onclick="
+          const p = DB.getProfile();
+          p.onboardingDone = true;
+          DB.saveProfile(p);
+          UI.renderHome();
+        ">Los geht's!</button>
+      </div>
+    `;
+  },
+
   setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     const profile = DB.getProfile();
@@ -2419,12 +2474,17 @@ const App = {
   },
 
   resetProgress() {
-    if (confirm('Wirklich ALLES zurücksetzen? Das kann nicht rückgängig gemacht werden!')) {
-      DB.clearAll();
-      CardEngine._cache = null;
-      LESSONS.forEach((l, i) => l.unlocked = i === 0);
-      UI.navigateTo('home');
-    }
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-card card">
+        <div style="font-size:17px;font-weight:700;margin-bottom:8px;color:var(--red)">Fortschritt zurücksetzen?</div>
+        <div style="font-size:14px;color:var(--text2);margin-bottom:16px">Alle Daten werden gelöscht. Das kann nicht rückgängig gemacht werden.</div>
+        <button class="btn-primary" onclick="this.closest('.modal-overlay').remove(); DB.clearAll(); CardEngine._cache = null; LESSONS.forEach((l,i) => l.unlocked = i===0); UI.navigateTo('home')" style="background:var(--red);margin-bottom:8px">Ja, alles löschen</button>
+        <button class="btn-secondary" onclick="this.closest('.modal-overlay').remove()">Abbrechen</button>
+      </div>
+    `;
+    document.getElementById('app').appendChild(overlay);
   }
 };
 
