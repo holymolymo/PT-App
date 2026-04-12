@@ -158,6 +158,13 @@ window.LESSONS = [
       note:'Portugiesisch hat Genus wie Deutsch – aber andere Zuordnung!'
     },
     {
+      id:'u1g04b', type:'rule',
+      title:'Unbestimmte Artikel (Indefinite)',
+      rule:'um (m.Sg.) / uma (f.Sg.) / uns (m.Pl.) / umas (f.Pl.)',
+      examples:['um livro (ein Buch)','uma casa (ein Haus)','uns amigos (einige Freunde)','umas ideias (einige Ideen)'],
+      note:'Wichtig für Deutsche: Vor Berufen mit ser KEINEN Artikel! "Sou médico" (nicht "Sou um médico"). Das ist ein typischer Deutschsprachigen-Fehler.'
+    },
+    {
       id:'u1g05', type:'rule',
       title:'Kontraktionen mit "de"',
       rule:'de + o = do | de + a = da | de + os = dos | de + as = das',
@@ -1037,6 +1044,13 @@ window.LESSONS = [
     {id:'u8v31',pt:'o concerto',de:'das Konzert',cat:'lazer'},
     {id:'u8v32',pt:'a exposição',de:'die Ausstellung',cat:'lazer'},
     {id:'u8v33',pt:'o espectáculo',de:'die Vorstellung / das Spektakel',cat:'lazer'},
+    // Natureza
+    {id:'u8v34',pt:'o mar',de:'das Meer',cat:'natureza'},
+    {id:'u8v35',pt:'a serra / a montanha',de:'das Gebirge / der Berg',cat:'natureza',expl:'a serra = Gebirgszug (z.B. Serra da Estrela). a montanha = einzelner Berg.'},
+    {id:'u8v36',pt:'o rio',de:'der Fluss',cat:'natureza'},
+    {id:'u8v37',pt:'a floresta',de:'der Wald',cat:'natureza'},
+    {id:'u8v38',pt:'a ilha',de:'die Insel',cat:'natureza',expl:'Die Azoren (Açores) und Madeira sind portugiesische Inseln.'},
+    {id:'u8v39',pt:'o lago',de:'der See',cat:'natureza'},
   ],
   phrases: [
     {id:'u8p01',pt:'Gostas de desporto?',de:'Machst du gerne Sport?'},
@@ -1102,6 +1116,10 @@ window.LESSONS = [
       rule:'Que tal...? (Wie wäre es mit...?) | Podemos... (Wir könnten...) | Combinado! (Abgemacht!) | Fica para outra vez. (Ein anderes Mal.)',
       examples:['Que tal irmos ao cinema? (Wie wäre es, ins Kino zu gehen?)','Podemos jantar juntos? (Können wir zusammen essen?)','Claro, boa ideia! (Klar, gute Idee!)','Desculpa, não posso. Fica para outra vez. (Sorry, kann nicht. Ein anderes Mal.)','Combinado! Às oito no restaurante. (Abgemacht! Um acht im Restaurant.)'],
       note:'"Que tal" + Infinitiv ist die einfachste Art, etwas vorzuschlagen. "Combinado" ist wie ein mündlicher Handschlag — "Deal!" Höflich absagen: "Fica para outra vez" (wörtlich: bleibt für ein anderes Mal).'},
+    {id:'u8g10', type:'rule', title:'Adverbien bilden mit -mente',
+      rule:'Weibliche Form des Adjektivs + -mente = Adverb',
+      examples:['rápida → rapidamente (schnell)','feliz → felizmente (glücklicherweise)','normal → normalmente (normalerweise)','lenta → lentamente (langsam)','fácil → facilmente (leicht/einfach)','infeliz → infelizmente (leider)'],
+      note:'Wenn das Adjektiv keine eigene weibliche Form hat (feliz, normal, fácil), einfach -mente anhängen. Bei zwei Adverbien hintereinander: nur das letzte bekommt -mente: "clara e rapidamente".'},
   ]
 },
 
@@ -1222,6 +1240,14 @@ window.LESSONS = [
     {id:'u10v16',pt:'o número de contribuinte / NIF',de:'die Steuernummer',cat:'serviços',expl:'NIF = Número de Identificação Fiscal. Wird in Portugal für fast alles benötigt.'},
     {id:'u10v17',pt:'o bilhete de identidade',de:'der Personalausweis',cat:'serviços'},
     {id:'u10v18',pt:'o passaporte',de:'der Reisepass',cat:'serviços'},
+    {id:'u10v19',pt:'a transferência',de:'die Überweisung',cat:'banco'},
+    {id:'u10v20',pt:'a senha',de:'das Passwort / die Wartenummer',cat:'serviços',expl:'a senha hat zwei Bedeutungen: Passwort (digital) und Wartenummer (am Schalter). Am Schalter: "Tire uma senha" = Ziehen Sie eine Nummer.'},
+    {id:'u10v21',pt:'a fila',de:'die Schlange / Warteschlange',cat:'serviços'},
+    {id:'u10v22',pt:'o atendimento',de:'die Bedienung / der Schalter',cat:'serviços',expl:'o atendimento = Kundenservice. "O atendimento é das 9h às 17h." = Der Schalter ist von 9 bis 17 Uhr geöffnet.'},
+    {id:'u10v23',pt:'o horário de funcionamento',de:'die Öffnungszeiten',cat:'serviços'},
+    {id:'u10v24',pt:'o multibanco / a caixa automática',de:'der Geldautomat / ATM',cat:'banco',expl:'Multibanco ist die portugiesische Bezeichnung für Geldautomaten – auch für Kartenzahlung im Laden.'},
+    {id:'u10v25',pt:'o cartão de débito / crédito',de:'die Debit- / Kreditkarte',cat:'banco'},
+    {id:'u10v26',pt:'trocar dinheiro',de:'Geld wechseln',cat:'banco'},
   ],
   phrases: [
     {id:'u10p01',pt:'Queria abrir uma conta bancária.',de:'Ich möchte ein Bankkonto eröffnen.',expl:'queria = ich möchte (höfliche Form).'},
@@ -1605,6 +1631,20 @@ window.LESSONS = [
       rule:'se + Präsens, Präsens = wenn..., dann...',
       examples:['Se chover, fico em casa. (Wenn es regnet, bleibe ich zuhause.)','Se quiseres, podemos ir juntos. (Wenn du willst, können wir zusammen gehen.)','Se houver tempo, vamos ao museu. (Wenn Zeit ist, gehen wir ins Museum.)'],
       note:'Einfache Bedingungssätze mit "se" + Präsens sind A2. Für höfliche Bitten: "Se não se importa..." (Wenn es Ihnen nichts ausmacht...).'},
+    {
+      id:'u13g05', type:'conjugation',
+      title:'Futuro Simples (falar)',
+      verb:'falar', tense:'futuro simples',
+      forms:{
+        'eu':'falarei','tu':'falarás','ele/ela/você':'falará',
+        'nós':'falaremos','eles/elas/vocês':'falarão'
+      },
+      note:'Bildung: Infinitiv + -ei/-ás/-á/-emos/-ão. Gilt für ALLE Verbgruppen (-ar, -er, -ir)!'
+    },
+    {id:'u13g06', type:'rule', title:'Futuro Simples — Verwendung',
+      rule:'Infinitiv + -ei/-ás/-á/-emos/-ão = Zukunft (formell)',
+      examples:['Amanhã falarei com o diretor. (Morgen werde ich mit dem Direktor sprechen.)','Será que vai chover? (Wird es wohl regnen?)','O tempo estará bom no fim-de-semana. (Das Wetter wird am Wochenende gut sein.)','Farei tudo o que puder. (Ich werde alles tun, was ich kann.)'],
+      note:'Im Alltag benutzt man meistens ir + Infinitiv statt Futuro Simples. Aber du begegnest dem Futuro in Nachrichten, Wetterberichten und formellen Texten. Irreguläre Stämme: fazer→far-, dizer→dir-, trazer→trar-.'},
   ]
 },
 
@@ -1636,6 +1676,13 @@ window.LESSONS = [
     {id:'u14v16',pt:'mudar',de:'sich ändern / umziehen',cat:'vida'},
     {id:'u14v17',pt:'partir / ir embora',de:'abreisen / weggehen',cat:'vida'},
     {id:'u14v18',pt:'voltar',de:'zurückkehren',cat:'vida'},
+    // Emoções
+    {id:'u14v19',pt:'nervoso / nervosa',de:'nervös / aufgeregt',cat:'emoções'},
+    {id:'u14v20',pt:'surpreso / surpreendido',de:'überrascht',cat:'emoções',expl:'surpreso und surpreendido bedeuten dasselbe. surpreso ist häufiger im EU-PT.'},
+    {id:'u14v21',pt:'entusiasmado / entusiasmada',de:'begeistert / aufgeregt',cat:'emoções'},
+    {id:'u14v22',pt:'assustado / assustada',de:'verängstigt / erschrocken',cat:'emoções'},
+    {id:'u14v23',pt:'orgulhoso / orgulhosa',de:'stolz',cat:'emoções'},
+    {id:'u14v24',pt:'o sonho',de:'der Traum',cat:'emoções',expl:'o sonho = der Traum (beim Schlafen und auch Lebenstraum). Aber: o sonho = auch Berliner (Gebäck)!'},
   ],
   phrases: [
     {id:'u14p01',pt:'Quando era criança, morava numa aldeia.',de:'Als ich ein Kind war, wohnte ich in einem Dorf.',expl:'era = ich war (Imperfeito von ser). morava = ich wohnte (Imperfeito von morar).'},
