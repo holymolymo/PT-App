@@ -669,5 +669,160 @@ window.CONVERSATIONS = [
         answer:'Muito obrigado! Volto amanhã para experimentar.',next:'c18n9'},
       {id:'c18n9',speaker:'npc',type:'say',pt:'Ótimo! Até amanhã então! Bom resto de dia!',de:'Super! Bis morgen dann! Schönen Tag noch!',next:'end'},
     ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 19. Im Restaurant bestellen
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    id: 'conv19',
+    title: 'Pedir no Restaurante',
+    subtitle: 'Im Restaurant bestellen',
+    icon: '🍽️',
+    color: '#dc2626',
+    difficulty: 'A1',
+    nodes: [
+      {id:'c19n1',speaker:'npc',type:'say',pt:'Boa noite! Bem-vindos. Mesa para dois?',de:'Guten Abend! Willkommen. Tisch für zwei?',next:'c19n2'},
+      {id:'c19n2',speaker:'learner',type:'choose',prompt:'Bestätige: Tisch für zwei, bitte',
+        options:[
+          {pt:'Sim, por favor. Uma mesa para dois.',correct:true,next:'c19n3'},
+          {pt:'Quero a conta, por favor.',correct:false,feedback:'"A conta" ist die Rechnung — du bist gerade erst angekommen! Sage "Uma mesa para dois, por favor."',next:'c19n2'},
+          {pt:'Não, obrigado.',correct:false,feedback:'Du möchtest doch essen gehen! Sage "Sim, por favor."',next:'c19n2'},
+        ],next:'c19n3'},
+      {id:'c19n3',speaker:'npc',type:'say',pt:'Claro! Sentem-se aqui, por favor. Aqui tem a ementa.',de:'Natürlich! Setzen Sie sich bitte hier. Hier ist die Speisekarte.',next:'c19n4'},
+      {id:'c19n4',speaker:'learner',type:'choose',prompt:'Frage nach dem Tagesgericht',
+        options:[
+          {pt:'Qual é o prato do dia?',correct:true,next:'c19n5'},
+          {pt:'Queria a ementa.',correct:false,feedback:'Du hast die Speisekarte schon! Frage nach dem Tagesgericht: "Qual é o prato do dia?"',next:'c19n4'},
+          {pt:'Tem Wi-Fi?',correct:false,feedback:'Das passt eher im Hotel! Frage nach dem Essen: "Qual é o prato do dia?"',next:'c19n4'},
+        ],next:'c19n5'},
+      {id:'c19n5',speaker:'npc',type:'say',pt:'Hoje temos bacalhau à Brás com salada. Também temos sopa do dia.',de:'Heute haben wir Bacalhau à Brás mit Salat. Außerdem Tagessuppe.',next:'c19n6'},
+      {id:'c19n6',speaker:'learner',type:'write',prompt:'Bestelle das Tagesgericht und eine Suppe als Vorspeise',
+        keywords:['prato','dia','sopa','entrada','queria','quero'],hint:'Queria o prato do dia e...',
+        answer:'Queria o prato do dia, e uma sopa como entrada, por favor.',next:'c19n7'},
+      {id:'c19n7',speaker:'npc',type:'say',pt:'Excelente! E para beber?',de:'Ausgezeichnet! Und zum Trinken?',next:'c19n8'},
+      {id:'c19n8',speaker:'learner',type:'write',prompt:'Bestelle ein Glas Rotwein',
+        keywords:['vinho','tinto','copo','queria','quero'],hint:'Um copo de vinho...',
+        answer:'Um copo de vinho tinto, por favor.',next:'c19n9'},
+      {id:'c19n9',speaker:'npc',type:'say',pt:'Com certeza! Já trago a sopa. Bom apetite!',de:'Natürlich! Ich bringe gleich die Suppe. Guten Appetit!',next:'c19n10'},
+      {id:'c19n10',speaker:'learner',type:'write',prompt:'Nach dem Essen: Bitte um die Rechnung',
+        keywords:['conta','pagar','favor'],hint:'A conta, por favor.',
+        answer:'A conta, por favor.',next:'c19n11'},
+      {id:'c19n11',speaker:'npc',type:'say',pt:'São vinte e três euros. Pode pagar na caixa ou aqui. Obrigado e boa noite!',de:'Das macht 23 Euro. Sie können an der Kasse oder hier zahlen. Danke und guten Abend!',next:'end'},
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 20. Auf der Bank
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    id: 'conv20',
+    title: 'No Banco',
+    subtitle: 'Auf der Bank',
+    icon: '🏦',
+    color: '#0284c7',
+    difficulty: 'A2',
+    nodes: [
+      {id:'c20n1',speaker:'npc',type:'say',pt:'Boa tarde! O que posso fazer por si?',de:'Guten Tag! Was kann ich für Sie tun?',next:'c20n2'},
+      {id:'c20n2',speaker:'learner',type:'choose',prompt:'Du möchtest ein Bankkonto eröffnen',
+        options:[
+          {pt:'Boa tarde! Gostaria de abrir uma conta bancária.',correct:true,next:'c20n3'},
+          {pt:'Quero levantar dinheiro.',correct:false,feedback:'Geld abheben geht am Multibanco (ATM). Du möchtest ein Konto eröffnen: "abrir uma conta bancária".',next:'c20n2'},
+          {pt:'Onde fica o multibanco?',correct:false,feedback:'Der Multibanco ist draußen. Du bist IN der Bank, um ein Konto zu eröffnen!',next:'c20n2'},
+        ],next:'c20n3'},
+      {id:'c20n3',speaker:'npc',type:'say',pt:'Com certeza. Vai precisar do passaporte e do NIF. Tem esses documentos consigo?',de:'Natürlich. Sie brauchen Reisepass und NIF. Haben Sie diese Dokumente dabei?',next:'c20n4'},
+      {id:'c20n4',speaker:'learner',type:'write',prompt:'Sage ja, du hast beide Dokumente dabei',
+        keywords:['sim','tenho','passaporte','NIF','aqui','document'],hint:'Sim, tenho...',
+        answer:'Sim, tenho o passaporte e o NIF aqui.',next:'c20n5'},
+      {id:'c20n5',speaker:'npc',type:'say',pt:'Ótimo. Quer uma conta à ordem ou uma conta poupança?',de:'Super. Möchten Sie ein Girokonto oder ein Sparkonto?',next:'c20n6'},
+      {id:'c20n6',speaker:'learner',type:'choose',prompt:'Du möchtest ein Girokonto',
+        options:[
+          {pt:'Uma conta à ordem, por favor.',correct:true,next:'c20n7'},
+          {pt:'Uma conta poupança, por favor.',correct:false,feedback:'Poupança = Sparkonto. Du brauchst ein Girokonto für den Alltag: "conta à ordem".',next:'c20n6'},
+          {pt:'Não sei. Qual é a diferença?',correct:false,feedback:'Gute Frage! Aber für den Alltag brauchst du eine "conta à ordem" (Girokonto).',next:'c20n6'},
+        ],next:'c20n7'},
+      {id:'c20n7',speaker:'npc',type:'say',pt:'Muito bem. Vou precisar que preencha este formulário. A conta fica ativa em 24 horas.',de:'Sehr gut. Ich brauche, dass Sie dieses Formular ausfüllen. Das Konto ist in 24 Stunden aktiv.',next:'c20n8'},
+      {id:'c20n8',speaker:'learner',type:'write',prompt:'Bedanke dich und frage, ob du online Banking nutzen kannst',
+        keywords:['obrigad','online','internet','app','banco'],hint:'Obrigado! Posso usar...',
+        answer:'Muito obrigado! Posso usar o banco online?',next:'c20n9'},
+      {id:'c20n9',speaker:'npc',type:'say',pt:'Sim, pode descarregar a aplicação do banco. As credenciais chegam por SMS. Mais alguma coisa?',de:'Ja, Sie können die Banking-App herunterladen. Die Zugangsdaten kommen per SMS. Sonst noch etwas?',next:'c20n10'},
+      {id:'c20n10',speaker:'learner',type:'write',prompt:'Sage nein danke und verabschiede dich',
+        keywords:['não','obrigad','dia','tarde'],hint:'Não, obrigado/a!',
+        answer:'Não, é tudo. Muito obrigado! Boa tarde!',next:'c20n11'},
+      {id:'c20n11',speaker:'npc',type:'say',pt:'De nada! Bem-vindo ao banco. Boa tarde!',de:'Gern geschehen! Willkommen bei der Bank. Guten Tag!',next:'end'},
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 21. Notfall — Hilfe rufen
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    id: 'conv21',
+    title: 'Emergência',
+    subtitle: 'Notfall — Hilfe holen',
+    icon: '🚨',
+    color: '#dc2626',
+    difficulty: 'A2',
+    nodes: [
+      {id:'c21n1',speaker:'npc',type:'say',pt:'Emergência 112, boa noite. Qual é a sua emergência?',de:'Notruf 112, guten Abend. Was ist Ihr Notfall?',next:'c21n2'},
+      {id:'c21n2',speaker:'learner',type:'choose',prompt:'Du brauchst einen Krankenwagen — jemand ist gestürzt',
+        options:[
+          {pt:'Preciso de uma ambulância, por favor! Uma pessoa caiu.',correct:true,next:'c21n3'},
+          {pt:'Preciso da polícia!',correct:false,feedback:'Die Polizei ist für Verbrechen. Bei einem Sturz brauchst du eine Ambulanz: "ambulância".',next:'c21n2'},
+          {pt:'Há um incêndio!',correct:false,feedback:'Ein Brand wäre die Feuerwehr (bombeiros). Du brauchst eine Ambulanz für den Sturz.',next:'c21n2'},
+        ],next:'c21n3'},
+      {id:'c21n3',speaker:'npc',type:'say',pt:'Onde é que está exatamente?',de:'Wo genau befinden Sie sich?',next:'c21n4'},
+      {id:'c21n4',speaker:'learner',type:'write',prompt:'Gib deinen Standort an (z.B. eine Straße in Lissabon)',
+        keywords:['rua','praça','Lisboa','perto','frente','número','avenida'],hint:'Estou na Rua...',
+        answer:'Estou na Rua Augusta, em frente ao número 25.',next:'c21n5'},
+      {id:'c21n5',speaker:'npc',type:'say',pt:'A ambulância está a caminho. A pessoa está consciente?',de:'Der Krankenwagen ist unterwegs. Ist die Person bei Bewusstsein?',next:'c21n6'},
+      {id:'c21n6',speaker:'learner',type:'choose',prompt:'Die Person ist bei Bewusstsein aber hat starke Schmerzen',
+        options:[
+          {pt:'Sim, está consciente, mas tem muitas dores.',correct:true,next:'c21n7'},
+          {pt:'Não, está inconsciente.',correct:false,feedback:'Die Person IST bei Bewusstsein (consciente), hat aber Schmerzen (dores).',next:'c21n6'},
+          {pt:'Não sei.',correct:false,feedback:'Beschreibe den Zustand: "Está consciente, mas tem muitas dores" (bei Bewusstsein, aber starke Schmerzen).',next:'c21n6'},
+        ],next:'c21n7'},
+      {id:'c21n7',speaker:'npc',type:'say',pt:'Muito bem. Não mexa a pessoa. A ambulância chega em cinco minutos. Fique na linha.',de:'Gut. Bewegen Sie die Person nicht. Der Krankenwagen ist in 5 Minuten da. Bleiben Sie in der Leitung.',next:'c21n8'},
+      {id:'c21n8',speaker:'learner',type:'write',prompt:'Sage danke und dass du in der Leitung bleibst',
+        keywords:['obrigad','fico','linha','sim'],hint:'Obrigado/a! Fico na linha.',
+        answer:'Muito obrigado! Fico na linha.',next:'end'},
+    ]
+  },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // 22. Auf der Post
+  // ═══════════════════════════════════════════════════════════════════
+  {
+    id: 'conv22',
+    title: 'Nos Correios',
+    subtitle: 'Auf der Post',
+    icon: '📮',
+    color: '#d97706',
+    difficulty: 'A2',
+    nodes: [
+      {id:'c22n1',speaker:'npc',type:'say',pt:'Boa tarde! Número 47, faça favor.',de:'Guten Tag! Nummer 47, bitte.',next:'c22n2'},
+      {id:'c22n2',speaker:'learner',type:'choose',prompt:'Du möchtest ein Paket nach Deutschland schicken',
+        options:[
+          {pt:'Boa tarde! Queria enviar esta encomenda para a Alemanha.',correct:true,next:'c22n3'},
+          {pt:'Quero comprar selos.',correct:false,feedback:'Briefmarken (selos) sind für Briefe. Für ein Paket: "enviar esta encomenda".',next:'c22n2'},
+          {pt:'Quero levantar uma encomenda.',correct:false,feedback:'"Levantar" = abholen. Du willst SCHICKEN: "enviar uma encomenda".',next:'c22n2'},
+        ],next:'c22n3'},
+      {id:'c22n3',speaker:'npc',type:'say',pt:'Claro. Pode pôr na balança, por favor? São dois quilos e trezentos.',de:'Natürlich. Können Sie es auf die Waage stellen? 2,3 Kilo.',next:'c22n4'},
+      {id:'c22n4',speaker:'learner',type:'choose',prompt:'Frage wie lange es dauert und ob es eine Sendungsverfolgung gibt',
+        options:[
+          {pt:'Quanto tempo demora? E tem rastreamento?',correct:true,next:'c22n5'},
+          {pt:'Quanto custa?',correct:false,feedback:'Der Preis kommt noch! Frage erst nach der Lieferzeit: "Quanto tempo demora?"',next:'c22n4'},
+          {pt:'Posso enviar por avião?',correct:false,feedback:'Portugal-Deutschland geht immer per Flugzeug. Frage lieber nach der Dauer und Sendungsverfolgung.',next:'c22n4'},
+        ],next:'c22n5'},
+      {id:'c22n5',speaker:'npc',type:'say',pt:'Normal demora cinco a sete dias úteis. Com rastreamento são doze euros e cinquenta.',de:'Normal 5-7 Werktage. Mit Sendungsverfolgung 12,50 Euro.',next:'c22n6'},
+      {id:'c22n6',speaker:'learner',type:'write',prompt:'Sage, dass du es mit Sendungsverfolgung schicken möchtest',
+        keywords:['rastreamento','sim','quero','queria','enviar','favor'],hint:'Sim, com rastreamento...',
+        answer:'Sim, com rastreamento, por favor.',next:'c22n7'},
+      {id:'c22n7',speaker:'npc',type:'say',pt:'Muito bem. Preciso que preencha esta guia com o endereço do destinatário. Aqui tem o recibo.',de:'Sehr gut. Füllen Sie bitte diesen Begleitschein mit der Empfängeradresse aus. Hier ist die Quittung.',next:'c22n8'},
+      {id:'c22n8',speaker:'learner',type:'write',prompt:'Bedanke dich und verabschiede dich',
+        keywords:['obrigad','tarde','dia'],hint:'Obrigado/a!',
+        answer:'Muito obrigado! Boa tarde!',next:'c22n9'},
+      {id:'c22n9',speaker:'npc',type:'say',pt:'De nada! Boa tarde!',de:'Gern geschehen! Guten Tag!',next:'end'},
+    ]
   }
 ];

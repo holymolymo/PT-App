@@ -35,7 +35,14 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
-  );
+  // Network-first for API calls, cache-first for assets
+  if (event.request.url.includes('api.anthropic.com')) {
+    event.respondWith(fetch(event.request).catch(() => new Response('{"error":"offline"}', {headers:{'Content-Type':'application/json'}})));
+  } else {
+    event.respondWith(
+      caches.match(event.request).then(cached => cached || fetch(event.request)).catch(() =>
+        caches.match('./index.html')
+      )
+    );
+  }
 });
