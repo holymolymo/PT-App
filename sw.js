@@ -1,5 +1,5 @@
-// Service Worker – Aprender Português PWA v2.1
-const CACHE_NAME = 'pt-app-v3';
+// Service Worker – Aprender Português PWA v3.0
+const CACHE_NAME = 'pt-app-v4';
 const ASSETS = [
   './',
   './index.html',

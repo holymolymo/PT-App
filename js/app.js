@@ -541,12 +541,7 @@ const Session = {
   start() {
     this._moduleId = null;
     this._smartConvId = null;
-    this.stats = { correct: 0, wrong: 0, seen: 0 };
-    this.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
-    this._recentResults = [];
-    this._sessionSeenIds = new Set();
-    this.startTime = Date.now();
-    DB.updateStreak();
+    this._initSession();
     this._startReviewPhase();
   },
 
@@ -554,12 +549,7 @@ const Session = {
     this._moduleId = null;
     this._smartConvId = convId;
     this._smartNewCards = newCards;
-    this.stats = { correct: 0, wrong: 0, seen: 0 };
-    this.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
-    this._recentResults = [];
-    this._sessionSeenIds = new Set();
-    this.startTime = Date.now();
-    DB.updateStreak();
+    this._initSession();
 
     // Phase 1: Review
     this.phase = 'review';
@@ -612,12 +602,18 @@ const Session = {
     }
   },
 
-  startModule(moduleId) {
-    this._moduleId = moduleId;
+  _initSession() {
     this.stats = { correct: 0, wrong: 0, seen: 0 };
     this.phaseStats = { review:{correct:0,wrong:0}, new:{correct:0,wrong:0} };
     this._recentResults = [];
     this._sessionSeenIds = new Set();
+    this.startTime = Date.now();
+    DB.updateStreak();
+  },
+
+  startModule(moduleId) {
+    this._moduleId = moduleId;
+    this._initSession();
     this.startTime = Date.now();
     DB.updateStreak();
     // Module sessions: review due module cards first, then new cards
@@ -1677,9 +1673,23 @@ const App = {
     const profile = DB.getProfile();
     document.documentElement.setAttribute('data-theme', profile.theme || 'dark');
 
-    // Register service worker
+    // Register service worker with update detection
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
+              // New version available — show subtle update banner
+              const banner = document.createElement('div');
+              banner.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:12px 16px;background:var(--accent);color:white;text-align:center;font-size:13px;font-weight:600;z-index:300;cursor:pointer';
+              banner.textContent = 'Update verfügbar — tippe zum Aktualisieren';
+              banner.onclick = () => location.reload();
+              document.body.appendChild(banner);
+            }
+          });
+        });
+      }).catch(() => {});
     }
 
     // Tab bar navigation
@@ -2570,9 +2580,9 @@ const Conversation = {
   start(convId, hideDeTranslations) {
     const convs = typeof CONVERSATIONS !== 'undefined' ? CONVERSATIONS : [];
     this.current = convs.find(c => c.id === convId);
-    // After first completion, hide German translations to increase difficulty
     const prog = this._getConvProgress(convId);
     this._hideDE = hideDeTranslations || (prog && prog.attempts >= 1);
+    this._attempts = {}; // Track attempts per node for hint escalation
     if (!this.current) return;
     this.nodeIdx = 0;
     this.messages = [];
@@ -2672,12 +2682,26 @@ const Conversation = {
       this._render();
       setTimeout(() => this._processNode(node.next), matched && !keywordMatch ? 1500 : 600);
     } else {
-      // Richer feedback: show what was expected and give a helpful hint
-      const feedbackParts = [];
-      if (node.answer) feedbackParts.push(`Richtige Antwort: "${node.answer}"`);
-      if (node.hint && node.hint !== node.answer) feedbackParts.push(`Tipp: ${node.hint}`);
-      if (!node.answer && node.hint) feedbackParts.push(`Tipp: ${node.hint}`);
-      this.messages.push({ speaker: 'system', text: feedbackParts.join('\n') || 'Versuche es nochmal!' });
+      // Hint escalation: 1st try = hint, 2nd try = stronger hint, 3rd try = show answer
+      this._attempts[nodeId] = (this._attempts[nodeId] || 0) + 1;
+      const attempt = this._attempts[nodeId];
+      let feedback;
+      if (attempt === 1) {
+        feedback = node.hint ? `Tipp: ${node.hint}` : 'Versuche es nochmal!';
+      } else if (attempt === 2) {
+        feedback = `Noch ein Versuch! Die Antwort beginnt mit: "${(node.answer || '').split(' ').slice(0, 2).join(' ')}..."`;
+      } else {
+        feedback = `Richtige Antwort: "${node.answer}"`;
+        // After 3 failed attempts, auto-advance
+        this.messages.push({ speaker: 'system', text: feedback });
+        this._render();
+        setTimeout(() => {
+          this.messages = this.messages.filter(m => m.speaker !== 'system');
+          this._processNode(node.next);
+        }, 2500);
+        return;
+      }
+      this.messages.push({ speaker: 'system', text: feedback });
       this._render();
       setTimeout(() => {
         this.messages = this.messages.filter(m => m.speaker !== 'system');
@@ -2713,9 +2737,12 @@ const Conversation = {
 
     let inputHTML = '';
     if (activeNode && activeNode.type === 'choose') {
+      // Randomize option order to prevent positional learning
+      const indices = activeNode.options.map((_, i) => i);
+      for (let i = indices.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [indices[i], indices[j]] = [indices[j], indices[i]]; }
       inputHTML = `<div class="chat-choices">
-        ${activeNode.options.map((opt, i) => `
-          <button class="chat-choice-btn" onclick="Conversation.selectOption('${activeNode.id}', ${i})">${opt.pt}</button>
+        ${indices.map(i => `
+          <button class="chat-choice-btn" onclick="Conversation.selectOption('${activeNode.id}', ${i})">${activeNode.options[i].pt}</button>
         `).join('')}
       </div>`;
     } else if (activeNode && activeNode.type === 'write') {

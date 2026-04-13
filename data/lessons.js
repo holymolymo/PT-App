@@ -456,6 +456,10 @@ window.LESSONS = [
       examples:['Ele é português. (dauerhaft)','Ele está em Lisboa. (temporär, kann sich ändern)','A Ana é bonita. (dauerhaft)','A Ana está cansada. (temporär)'],
       note:'Das ist EINER der wichtigsten Unterschiede im Portugiesischen!'
     },
+    {id:'u3g02b', type:'rule', title:'ser oder estar? — Übung',
+      rule:'Wähle: ser (dauerhaft) oder estar (temporär/Ort/Zustand)',
+      examples:['Eu ___ alemão. → sou (Nationalität = ser)','Eu ___ em Lisboa. → estou (Ort = estar)','Ela ___ professora. → é (Beruf = ser)','Ele ___ cansado. → está (Zustand = estar)','O café ___ quente. → está (kann sich ändern = estar)','Portugal ___ bonito. → é (Eigenschaft = ser)'],
+      note:'Faustregel: Kann es sich morgen ändern? → estar. Ist es eine grundlegende Eigenschaft? → ser. Ausnahmen: "estar morto" (tot sein) — obwohl dauerhaft, weil es ein Zustandswechsel war!'},
     {id:'u3g03', type:'rule', title:'Gesprächswörter (Discourse Markers)',
       rule:'então (also/dann) | pois (ja/tja) | pronto (gut/fertig) | bom (also) | olhe (schauen Sie)',
       examples:['Então, como estás? (Also, wie geht es dir?)','Pois é. (Ja, genau. / Tja.)','Pronto, vamos? (Gut, gehen wir?)','Bom, eu acho que... (Also, ich denke dass...)','Olhe, desculpe. (Schauen Sie, Entschuldigung.)'],
@@ -1291,6 +1295,10 @@ window.LESSONS = [
       rule:'Infinitiv + -ia/-ias/-ia/-íamos/-iam = würde/könnte/möchte',
       examples:['Gostaria de um café. (Ich hätte gerne einen Kaffee.)','Poderia ajudar-me? (Könnten Sie mir helfen?)','Seria possível? (Wäre es möglich?)','Diria que sim. (Ich würde ja sagen.)'],
       note:'Der Konditional wird aus dem Infinitiv gebildet + -ia. Für höfliche Bitten ist er eleganter als "queria" (Imperfeito). Im Alltag benutzen viele Portugiesen aber weiterhin das Imperfeito.'},
+    {id:'u10g04b', type:'conjugation', title:'Condicional: falar (regelmäßig)',
+      verb:'falar', tense:'condicional',
+      forms:{'eu':'falaria','tu':'falarias','ele/ela/você':'falaria','nós':'falaríamos','eles/elas/vocês':'falariam'},
+      note:'Bildung: Infinitiv + -ia/-ias/-ia/-íamos/-iam. Funktioniert für ALLE Verben gleich (auch irreguläre!). Ausnahme: fazer→faria, dizer→diria, trazer→traria (gleiche Stämme wie Futuro Simples).'},
     {id:'u10g05', type:'rule', title:'Superlativ: o mais / -íssimo',
       rule:'o/a mais + Adj. + de = der/die -ste | Adj. + -íssimo = sehr/extrem',
       examples:['Ela é a mais inteligente da turma. (Sie ist die Klügste der Klasse.)','Lisboa é lindíssima! (Lissabon ist wunderschön!)','Muitíssimo obrigado! (Vielen vielen Dank!)','É o melhor restaurante da cidade. (Das beste Restaurant der Stadt.)'],
@@ -1645,6 +1653,10 @@ window.LESSONS = [
       rule:'Infinitiv + -ei/-ás/-á/-emos/-ão = Zukunft (formell)',
       examples:['Amanhã falarei com o diretor. (Morgen werde ich mit dem Direktor sprechen.)','Será que vai chover? (Wird es wohl regnen?)','O tempo estará bom no fim-de-semana. (Das Wetter wird am Wochenende gut sein.)','Farei tudo o que puder. (Ich werde alles tun, was ich kann.)'],
       note:'Im Alltag benutzt man meistens ir + Infinitiv statt Futuro Simples. Aber du begegnest dem Futuro in Nachrichten, Wetterberichten und formellen Texten. Irreguläre Stämme: fazer→far-, dizer→dir-, trazer→trar-.'},
+    {id:'u13g07', type:'conjugation', title:'Futuro Simples: fazer (unregelmäßig)',
+      verb:'fazer', tense:'futuro simples',
+      forms:{'eu':'farei','tu':'farás','ele/ela/você':'fará','nós':'faremos','eles/elas/vocês':'farão'},
+      note:'fazer→far- (Stamm verkürzt!). Gleiche Endungen wie regulär. Auch: dizer→dir- (direi, dirás...), trazer→trar- (trarei, trarás...).'},
   ]
 },
 
